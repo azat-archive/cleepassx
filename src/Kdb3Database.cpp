@@ -1377,7 +1377,7 @@ bool Kdb3Database::save(){
 	}
 	
 	//Delete old backup entries
-	if (config->backup() && config->backupDelete() && config->backupDeleteAfter()>0 && backupGroup()){
+	if (not cli and config->backup() && config->backupDelete() && config->backupDeleteAfter()>0 && backupGroup()){
 		QDateTime time = QDateTime::currentDateTime().addDays(-config->backupDeleteAfter());
 		QList<IEntryHandle*> backupEntries = entries(backupGroup());
 		for (int i=0; i<backupEntries.size(); i++){

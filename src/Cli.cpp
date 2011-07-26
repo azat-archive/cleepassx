@@ -69,12 +69,24 @@ std::ostream& operator<< (std::ostream& _str, const QString& _qstr) {
 }
 bool Cli::openDatabase(const QString& filename, bool IsAuto) {
     if (!QFile::exists(filename)){
-        cerr << __WHEREAMI__ << "> File «"
+        cout << __WHEREAMI__ << "> File «"
              << filename << "» was not found." << endl;
         return false;
+        cout << "Would you like to create there a new database? ";
+        if (ReadYesNoChar("", "y", "n", 'y') != 'y')
+            return false;
+        db.reset(new Kdb3Database(true));
+        db->create();
+        db->changeFile(filename);
+        QString passwd = ReadPassword(PasswdConfirm::yes);
+        db->setKey(passwd, "");
+        db->generateMasterKey();
+        db->save();
+        return true;
     }
     _Lockfile = filename + ".lock";
     if (QFile::exists(_Lockfile)) {
+        dbReadOnly = true;
         const char readonly_ans =
             ReadYesNoChar(tr("The database you are trying to open is locked.\n"
                 "This means that either someone else has opened the file or KeePassX crashed last time it opened the database.\n\n"
@@ -83,8 +95,7 @@ bool Cli::openDatabase(const QString& filename, bool IsAuto) {
             string("yд"),
             string("nн"),
             'y');
-        if (readonly_ans == 'y') dbReadOnly = true;
-        else return false;
+        if (readonly_ans != 'y') return false;
     }
 //     config->setLastKeyLocation(QString());
 //     config->setLastKeyType(PASSWORD);
@@ -99,11 +110,8 @@ bool Cli::openDatabase(const QString& filename, bool IsAuto) {
         cout << "Failed to get the database password.\nAu revoir!\n";
         return false;
     }
-    cerr << "db->setKey... ";
     db->setKey(pass, "");
-    cerr << "ok\ndb->load...\n";
     if(db->load(filename, dbReadOnly)) {
-        cerr << "db opened";
         if (IsLocked)
             resetLock();
         updateCurrentFile(filename);
@@ -396,9 +404,22 @@ void Cli::set(const QStringList& _params) {
     }
     IEntryHandle* _ = confirm_first(_params[1]);
     if (_ == NULL) return;
+    if (_params[0] == "comment") {
+        if (_params.size() < 3)
+            _->setComment(QString());
+        else
+            _->setComment(_params[2]);
+        return;
+    }
+    if(_params.size() < 3) {
+        cerr << "You need to supply 3 parameters to the command «set "
+        << _params[0] << "»:\nset "
+        << _params[0] << " title new_" << _params[0] << "\n";
+        return;
+    }
     if (_params[0] == "title") {
         if (_params.size() < 3) {
-            cout << "You cannot delete the tzdanie1itle of the record, sorry. I cannot do it too.";
+            cout << "You cannot delete the title of the record, sorry. I cannot do it too...";
             return;
         }
         _->setTitle(_params[2]);
@@ -429,6 +450,10 @@ void Cli::set(const QStringList& _params) {
     }
 }
 void Cli::create(const QStringList& _entries) {
+    if (_Wd == NULL) {
+        cout << "It is impossible to create an entry in the root group, sorry.\n";
+        return;
+    }
     for (size_t i = 0; i < _entries.size(); ++i) {
         if (_HEntries.contains(_entries[i])) {
             cout << "Current group already contains an item with title «"
@@ -565,7 +590,8 @@ char* Cli::set_completer(const char* _beginning, int _state) {
     static int i; if (_state == 0) i = -1;
     QStringList cmds;
 #define _(cmd) cmds.push_back(cmd)
-    _("title"); _("passwd"); _("url"), _("comment"); ("user");
+    _("title"); _("passwd"); _("url"), _("comment"); _("user");
+    _("help");
 #undef __AllC
     return complete(_beginning, cmds, i);
 }
