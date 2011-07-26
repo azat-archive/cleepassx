@@ -228,8 +228,9 @@ QStringList Cli::readCmd() {
         const char c = line[i];
         if (quote != 0) {
             if (c == quote) {
-                lexem += QString::fromUtf8(line + lexem_start,
-                                           i - lexem_start - 1);
+                if (i > lexem_start)
+                    lexem += QString::fromUtf8(line + lexem_start,
+                                               i - lexem_start);
                 quote = 0;
                 lexem_start = i + 1;
             }
@@ -237,11 +238,11 @@ QStringList Cli::readCmd() {
         } else {
             if (c == '\'' or c == '"') {
                 quote = c;
-                if (i > lexem_start) {
+                if (i > lexem_start + 1) {
                     lexem += QString::fromUtf8(line + lexem_start,
-                                               i - lexem_start - 1);
-                    lexem_start = i + 1;
+                                               i - lexem_start);
                 }
+                lexem_start = i + 1;
                 continue;
             }
             if (c != ' ') continue;
@@ -252,7 +253,6 @@ QStringList Cli::readCmd() {
             lexem.clear();
 //             ret.push_back(QString::fromUtf8(line + lexem_start, i - lexem_start));
         }
-
         lexem_start = i;
         while (line[lexem_start] == ' ') ++lexem_start;
         if (line[lexem_start] == 0) return ret;
@@ -260,10 +260,10 @@ QStringList Cli::readCmd() {
     }
     if (lexem_start < i) {
         if (quote != 0) cerr << "warning: autoclosing quote!\n";
-        ret.push_back(QString::fromUtf8(line + lexem_start, i - lexem_start));
+        lexem += QString::fromUtf8(line + lexem_start, i - lexem_start);
     }
+    if (not lexem.isEmpty()) ret.push_back(lexem);
     return ret;
-#endif
 }
 void Cli::ls(bool _quiet) const {
     QList<IGroupHandle*> group = db->groups();
@@ -290,6 +290,8 @@ void Cli::help() const {
          << "cd .., s — go to parent group\n"
          << "cd -, back, p — go to previous group (double «p» moves to previous, then back to current group)\n"
          << "cd / — go to the root group\n"
+         << "cat <entry> — display entry information\n"
+         << "passwd <entry> — show passwd stored in entry. Use Ctrl+L to clear screen.\n"
          << "set — modify a database entry. Type «set help» for details.\n"
          << "create — create new entry\n"
          << "rm — completely remove an entry from database\n"
