@@ -27,6 +27,7 @@
 #include <memory>
 
 #include <functional>
+#include "helpers/syntax.h"
 
 class Cli : public QObject {
     Q_OBJECT
@@ -39,11 +40,13 @@ public:
 // this function must be const but that requires Kdb3Database code to be fixed: db->groups must also be const (maybe just Cli::db should be done mutable, I'm not sure…)
     /// list contents of current group (items&subgroups)
     /// if (_quiet) prints nothing, just updates the cache of _HSubGroups
-    void ls(bool _quiet = false) const;
+    struct ls_quiet { enum flag { no = false, yes = true }; };
+    void ls(ls_quiet::flag _quiet = ls_quiet::no) const;
     /// change current group to its subgroup. Think of it as of changing cwd.
     void cd(const QString& _subgroup);
-    /// list all entries (not groups) in cwd with title _entry
-    QList<IEntryHandle*> find_in_cwd(const QString& _entry) const;
+    /// list all entries or groups in cwd with title _entry
+    template <typename T>
+    QList<T*> find_in_cwd(const QString& _entry) const;
     /// list an _entry contents except password. The _entry must be in the cwd.
     void cat(const QString& _entry) const;
     /// show a password contained in the _entry.
@@ -53,16 +56,20 @@ public:
     /// create new items specified by titles.
     void create(const QStringList& _entries);
     /// remove entries specified by titles
-    void rm(const QStringList& _entry);
+    void rm(const QStringList& _titles);
+    /// create new group(s) in _Wd
+    void md(const QStringList& _names);
+    /// remove groups from wd (recursively, without confirmation).
+    void rm_rf(const QStringList& _names);
     /// save database
-    void save(const QStringList& _empty_list);
+    /** \return saved? fails upon the empty db.
+    **/
+    bool save(const QStringList& _empty_list);
     /// read password from the terminal without echoing it.
     /** \return password or QString() (which isNull() rather than isEmpty()) if user hit Ctrl+D.
     **/
-    struct PasswdConfirm {
-        enum flag { no = false, yes = true };
-    };
-    QString ReadPassword(PasswdConfirm::flag _confirmation_neede);
+    struct PasswdConfirm { enum flag { no = false, yes = true }; };
+    QString ReadPassword(PasswdConfirm::flag _confirmation_needed);
     void help() const;
 
     static Cli& the();
@@ -81,7 +88,7 @@ private:
     void resetLock() { IsLocked = 42 ^ 42; }
     
     void updateCurrentFile(const QString& /*filePath*/) {
-        std::cerr << __FILE__ << ":" << __LINE__ << "> Todo: implement updateCurrentFile;\n";
+//         std::cerr << __FILE__ << ":" << __LINE__ << "> Todo: implement updateCurrentFile;\n";
     }
     void saveLastFilename(const QString& filename);
     void setStateFileOpen(bool _) { FileOpen = _; }
@@ -101,12 +108,25 @@ private:
     QString _Lockfile; ///< _Filename's lock file
 
     ///subgroup handles. Formed by ls call, then cached until cd.
-    mutable QMap<QString,IGroupHandle*> _HSubGroups;
+    mutable QMultiMap<QString,IGroupHandle*> _HSubGroups;
     ///handles of entries in cwd. Formed by ls or cat call, then cached until cd.
     mutable QMultiMap<QString,IEntryHandle*> _HEntries;
 
     /// find in _Wd an entry labeled _title and ask user confirmation if thre's more than one suitable. Return const ptr (no deletion must be done) to the entry or NULL.
-    inline IEntryHandle* confirm_first(const QString& _title);
+    /// T may be either IEntryHandle or IGroupHandle
+    template <typename T>
+    T* confirm_first(const QString& _title);
+
+    inline QMultiMap<QString,IEntryHandle*> _Wd_map(helpers::syntax::Type<IEntryHandle>) const {
+        return _HEntries;
+    }
+    inline QMultiMap<QString,IGroupHandle*> _Wd_map(helpers::syntax::Type<IGroupHandle>) const {
+        return _HSubGroups;
+    }
+    template <typename T>
+    inline QMultiMap<QString,T*> _Wd_map() const {
+        return _Wd_map(helpers::syntax::Type<T>());
+    }
 
     //======== GNU Readline interfaces ========
     static char** tab_complete(const char* _beginning, int _start, int _end);

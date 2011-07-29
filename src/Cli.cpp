@@ -34,6 +34,7 @@
 
 #include <termios.h>
 #include <unistd.h>
+#include <qmap.h>
 
 using namespace helpers::cli;
 using namespace std;
@@ -63,7 +64,6 @@ Cli& Cli::the() {
     static Cli interface;
     return interface;
 }
-
 std::ostream& operator<< (std::ostream& _str, const QString& _qstr) {
     return _str << _qstr.toUtf8().constData();
 }
@@ -71,7 +71,7 @@ bool Cli::openDatabase(const QString& filename, bool IsAuto) {
     if (!QFile::exists(filename)){
         cout << __WHEREAMI__ << "> File «"
              << filename << "» was not found." << endl;
-        return false;
+//         return false;
         cout << "Would you like to create there a new database? ";
         if (ReadYesNoChar("", "y", "n", 'y') != 'y')
             return false;
@@ -81,6 +81,10 @@ bool Cli::openDatabase(const QString& filename, bool IsAuto) {
         QString passwd = ReadPassword(PasswdConfirm::yes);
         db->setKey(passwd, "");
         db->generateMasterKey();
+        QStringList initial_groups;
+        initial_groups.push_back("Internet");
+        initial_groups.push_back("eMail");
+        md(initial_groups);
         db->save();
         return true;
     }
@@ -178,11 +182,15 @@ int Cli::Run(const QString& _filename) {
         cmd = readCmd();
     }
     if (ModFlag) {
-        cout << "The database has not been saved since last modification.\n"
-             << "Would you like to save it now before exit?";
-        if (helpers::cli::ReadYesNoChar("", "y", "n", 'y')) {
-            db->save();
-            cout << "The database has been saved.\n";
+        if (db.groups().isEmpty()) {
+            cout << "The database has unsaved modifications but cannot be saved since it is empty. It will be rolled back to the last saved version.\n";
+        } else {
+            cout << "The database has not been saved since last modification.\n"
+                 << "Would you like to save it now before exit?";
+            if (helpers::cli::ReadYesNoChar("", "y", "n", 'y')) {
+                db->save();
+                cout << "The database has been saved.\n";
+            }
         }
     }
     closeDatabase();
@@ -218,7 +226,23 @@ QStringList Cli::readCmd() {
         char operator[](size_t _) const { return data[_]; }
         char* data;
     } line (readline(Qstring2constchars(prompt)));
+    struct read_last_endl {
+        ~read_last_endl() {
+            istream::char_type c = 0;
+            while (not cin.readsome(&c, 1) > 0) {
+                cerr << "Skipping char #" << (int)c << "\n";
+                if (c != '\n' and c != '\r') {
+                    cerr << "unget\n";
+                    cin.unget();
+                    return;
+                } 
+            }
+        }
+    };
     if (line == NULL) {
+        if (ModFlag and db->groups().isEmpty()) {
+            
+        }
         cout << "Au revoir\n";
         ret.push_back("exit"); return ret;
     }
@@ -273,22 +297,23 @@ QStringList Cli::readCmd() {
     if (not lexem.isEmpty()) ret.push_back(lexem);
     return ret;
 }
-void Cli::ls(bool _quiet) const {
+void Cli::ls(Cli::ls_quiet::flag _quiet) const {
     QList<IGroupHandle*> group = db->groups();
+    _HSubGroups.clear();
     for (QList<IGroupHandle*>::const_iterator i = group.constBegin();
          i != group.constEnd(); ++i) {
         if ((*i)->parent() != _Wd)
             continue;
-        _HSubGroups[(*i)->title()] = *i;
+        _HSubGroups.insert((*i)->title(), *i);
         if (not _quiet) cout << "+ " << (*i)->title() << "\n";
     }
 
     if (_Wd == NULL) return;
     QList<IEntryHandle*> entries = db->entries(_Wd);
-    bool update_entries = _HEntries.isEmpty();
+    _HEntries.clear();
     for (QList<IEntryHandle*>::const_iterator i = entries.constBegin();
          i != entries.constEnd(); ++i) {
-        if (update_entries) _HEntries.insert((*i)->title(), *i);
+        _HEntries.insert((*i)->title(), *i);
         if (not _quiet) cout << "⋅ " << (*i)->title() << "\n";
     }
 }
@@ -301,13 +326,14 @@ void Cli::help() const {
          << "cat <entry> — display entry information\n"
          << "passwd <entry> — show passwd stored in entry. Use Ctrl+L to clear screen.\n"
          << "set — modify a database entry. Type «set help» for details.\n"
-         << "create — create new entry\n"
-         << "rm — completely remove an entry from database\n"
+         << "create <entry> — create new entry. Cannot be applied to the root group.\n"
+         << "rm <entry> — completely remove an entry from database\n"
+         << "md <group>, mkdir <group> — create a new subgroup here\n"
          << "save — save the database to disk\n"
          << "help — display help\n";
 }
 void Cli::cd(const QString& _subgroup) {
-    if (_HSubGroups.empty()) ls(true);
+    if (_HSubGroups.empty()) ls(ls_quiet::yes);
     if (_subgroup == "-") {
         std::swap(_Wd, _Previous_Wd);
         _HSubGroups.clear();
@@ -329,29 +355,31 @@ void Cli::cd(const QString& _subgroup) {
         _HEntries.clear();
         return;
     }
-    if (not _HSubGroups.contains(_subgroup)
-        or _HSubGroups[_subgroup] == NULL) {
+    IGroupHandle* _ = confirm_first<IGroupHandle>(_subgroup);
+    if (_ == NULL) {
         cerr << "There is no subgroup «" << _subgroup
              << "» in the current group.\n";
         return;
     }
 
     _Previous_Wd = _Wd;
-    _Wd = _HSubGroups[_subgroup];
+    _Wd = _;
     _HSubGroups.clear();
     _HEntries.clear();
 }
-QList< IEntryHandle* > Cli::find_in_cwd(const QString& _entry) const {
-    if (_entry.isEmpty()) return QList< IEntryHandle* >();
-    if (_HEntries.empty()) ls(true);
-    const QList<IEntryHandle*> keys = _HEntries.values(_entry);
+template <typename T>
+QList<T*> Cli::find_in_cwd(const QString& _entry) const {
+    if (_entry.isEmpty()) return QList<T*>();
+    const QMultiMap<QString,T*> lst = _Wd_map<T>();
+    if (lst.empty()) ls(ls_quiet::yes);
+    const QList<T*> keys = lst.values(_entry);
     if (keys.empty())
-        cout << "There is no entry with title «" << _entry
+        cout << "There is no item with title «" << _entry
              << "» in the current group. Consider using the «l» command or try «?».\n";
     return keys;
 }
 void Cli::cat(const QString& _entry) const {
-    const QList<IEntryHandle*> keys = find_in_cwd(_entry);
+    const QList<IEntryHandle*> keys = find_in_cwd<IEntryHandle>(_entry);
     for (QList<IEntryHandle*>::const_iterator i = keys.constBegin();
          i != keys.constEnd(); ++i) {
         cout << "\t=== " << (*i)->title() << " ===\n"
@@ -363,7 +391,7 @@ void Cli::cat(const QString& _entry) const {
     }
 }
 void Cli::passwd(const QString& _entry) const {
-    const QList<IEntryHandle*> keys = find_in_cwd(_entry);
+    const QList<IEntryHandle*> keys = find_in_cwd<IEntryHandle>(_entry);
     for (QList<IEntryHandle*>::const_iterator i = keys.constBegin();
          i != keys.constEnd(); ++i) {
         SecString passwd = (*i)->password();
@@ -372,8 +400,9 @@ void Cli::passwd(const QString& _entry) const {
         passwd.lock();
     }
 }
-IEntryHandle* Cli::confirm_first(const QString& _title) {
-    QList <IEntryHandle*> entries = find_in_cwd(_title);
+template<typename T>
+T* Cli::confirm_first(const QString& _title) {
+    QList <T*> entries = find_in_cwd<T>(_title);
     if (entries.empty()) return NULL;
     ///\todo support more than one entry with the same name in one group
     if (entries.size() > 1) {
@@ -402,7 +431,7 @@ void Cli::set(const QStringList& _params) {
         << "if new_" << _params[0] << " is ommitted, the existing one will be deleted.";
         return;
     }
-    IEntryHandle* _ = confirm_first(_params[1]);
+    IEntryHandle* _ = confirm_first<IEntryHandle>(_params[1]);
     if (_ == NULL) return;
     if (_params[0] == "comment") {
         if (_params.size() < 3)
@@ -454,10 +483,11 @@ void Cli::create(const QStringList& _entries) {
         cout << "It is impossible to create an entry in the root group, sorry.\n";
         return;
     }
+    if (_HEntries.isEmpty()) ls(ls_quiet::yes);
     for (size_t i = 0; i < _entries.size(); ++i) {
         if (_HEntries.contains(_entries[i])) {
             cout << "Current group already contains an item with title «"
-                 << _entries[i] << "». If you create a new one, you won't be able to modify one of the items from this console interface of keepassx. ";
+                 << _entries[i] << "». If you create a new one, you won't be able to modify one of the entries from this console interface of keepassx. ";
             if (helpers::cli::ReadYesNoChar("Continue?", "y", "n", 'n') == 'n')
                 continue;
         }
@@ -468,21 +498,68 @@ void Cli::create(const QStringList& _entries) {
             _HEntries.insert(_entries[i], _new);
     }
 }
+void Cli::md(const QStringList& _entries) {
+    for (size_t i = 0; i < _entries.size(); ++i) {
+        if (_HSubGroups.contains(_entries[i])) {
+            cout << "Current group already contains a subgroup named «"
+                 << _entries[i] << "». If you create a new one, you won't be able to cd to one of the groups from this console interface of keepassx. ";
+            if (helpers::cli::ReadYesNoChar("Continue?", "y", "n", 'n') == 'n')
+                continue;
+        }
+        CGroup newGroup;
+        newGroup.Title = _entries[i];
+        IGroupHandle* _new = db->addGroup(&newGroup, _Wd);
+        ModFlag = true;
+        if (not _HSubGroups.empty())
+            _HSubGroups.insert(_entries[i], _new);
+    }
+}
 void Cli::rm(const QStringList& _entries) {
     for (size_t i = 0; i < _entries.size(); ++i) {
-        IEntryHandle* _ = confirm_first(_entries[i]);
+        IEntryHandle* const _ = confirm_first<IEntryHandle>(_entries[i]);
         if (_ == NULL) continue;
         db->deleteEntry(_);
+        _HEntries.remove(_entries[i], _);
     }
     ModFlag = true;
 }
-void Cli::save(const QStringList& _empty_list) {
+void Cli::rm_rf(const QStringList& _names) {
+    if (_HSubGroups.isEmpty()) ls(ls_quiet::yes);
+    for (size_t i = 0; i < _names.size(); ++i) {
+        IGroupHandle* _ = confirm_first<IGroupHandle>(_names[i]);
+        if (_ == NULL) {
+            cerr << "There is no subgroup «"
+                 << _names[i] << "» in the current group,\n"
+                 << "use «ls» to get the full list.\n";
+            continue;
+        }
+        if (_HSubGroups.size() == 1) {
+            cout << "You are about to delete the last group in the database. You won't be able to save it until some new group is created. If you wish to save the database now, enter «n», otherwise answer «y» to continue deletion";
+            if (ReadYesNoChar("", "y", "n", 'y') != 'y') return;
+        }
+        cout << "Are you absolutely sure you wish to irrecoverably erase the whole group «" << _names[i] << "» with all its contents?";
+        if (ReadYesNoChar("", "y", "n", 'n') != 'y') continue;
+        db->deleteGroup(_);
+        if (not _HSubGroups.isEmpty())
+            _HSubGroups.remove(_names[i], _);
+        ModFlag = true;
+    }
+}
+bool Cli::save(const QStringList& _empty_list) {
     if (not _empty_list.isEmpty()) {
         cerr << "The command «save» has no parameters. If you meant «save as...», by now you'll have to do it using your shell, I'm sorry. Some update will enable the «save as...» semantics, but later.\n";
-        return;
+        return false;
+    }
+    if (_Wd == NULL) {
+        if (db->groups().isEmpty()) {
+            // no, that's not cli limitation, db->save() just does absolutely nothing for an empty database.
+            cerr << "Sorry, it is impossible to save an empty database.\n";
+            return false;
+        }
     }
     db->save();
     ModFlag = false;
+    return true;
 }
 QString Cli::ReadPassword(PasswdConfirm::flag _confirmation_needed) {
     QString pass;
@@ -522,6 +599,8 @@ void Cli::ProcessCmd(const QStringList& _) {
     else if (_[0] == "set") set(_.mid(1));
     else if (_[0] == "create") create(_.mid(1));
     else if (_[0] == "rm") rm(_.mid(1));
+    else if (_[0] == "md" || _[0] == "mkdir") md(_.mid(1));
+    else if (_[0] == "rd" || _[0] == "rmdir") rm_rf(_.mid(1));
     else if (_[0] == "save") save(_.mid(1));
     else if (_[0] == "help" || _[0] == "?") help();
     else cerr << "The command «" << _[0].toStdString()
@@ -531,22 +610,21 @@ void Cli::ProcessCmd(const QStringList& _) {
 char** Cli::tab_complete(const char* _beginning, int _start, int /*_end*/) {
     rl_attempted_completion_over = true;
     if (_start == 0) return rl_completion_matches(_beginning, cmd_completer);
-//     if (_end > 2 and !strcmp (_beginning, "cd"))
-/*    cerr << "rl_line_buffer is «" << rl_line_buffer << "»\n";
-    cerr << "_beginning is «" << _beginning << "»\n";
-    cerr << "_start is " << _start << "\n";*/
     const QString user_input = QString::fromUtf8(rl_line_buffer);
     if (user_input.startsWith("cat ")
         or user_input.startsWith("passwd ")
         or user_input.startsWith("rm ")
        ) 
         return rl_completion_matches(_beginning, entries_completer);
-    if (user_input.startsWith("cd "))
+    if (user_input.startsWith("cd ")
+        or user_input.startsWith("rd ")
+        or user_input.startsWith("rmdir ")
+        )
         return rl_completion_matches(_beginning, dir_completer);
     if (user_input.startsWith("set ")) {
         QString set_cmd = user_input.mid(4);
         if (not set_cmd.contains(QRegExp("[^ ]+ ")))
-            // не введена команда для set
+            // awaiting action for set
             return rl_completion_matches(_beginning, set_completer);
         if (not set_cmd.contains(QRegExp("[^ ]+ [^ ]+ ")))
             return rl_completion_matches(_beginning, entries_completer);
@@ -562,12 +640,12 @@ char* complete(const char* _beginning, const QStringList& _list, int& _start) {
     return NULL;
 }
 char* Cli::entries_completer(const char* _beginning, int _state) {
-    if (the()._HEntries.empty()) the().ls(true);
+    if (the()._HEntries.empty()) the().ls(ls_quiet::yes);
     static int i; if (_state == 0) i = -1;
     return complete(_beginning, the()._HEntries.keys(), i);
 }
 char* Cli::dir_completer(const char* _beginning, int _state) {
-    if (the()._HEntries.empty()) the().ls(true);
+    if (the()._HSubGroups.empty()) the().ls(ls_quiet::yes);
     static int i; if (_state == 0) i = -1;
     return complete(_beginning, the()._HSubGroups.keys(), i);
 }
@@ -576,7 +654,7 @@ char* Cli::cmd_completer(const char* _beginning, int _state) {
     if (_AllCmds.empty()) {
 #define _(cmd) _AllCmds.push_back(cmd)
         _("cd"), _("s"), _("p");
-        _("l"), _("ls");
+        _("l"), _("ls"); _("mkdir"), _("rmdir");
         _("cat"), _("passwd");
         _("set"), _("create"), _("rm");
         _("save");
@@ -592,6 +670,6 @@ char* Cli::set_completer(const char* _beginning, int _state) {
 #define _(cmd) cmds.push_back(cmd)
     _("title"); _("passwd"); _("url"), _("comment"); _("user");
     _("help");
-#undef __AllC
+#undef _
     return complete(_beginning, cmds, i);
 }

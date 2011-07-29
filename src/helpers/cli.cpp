@@ -1,10 +1,19 @@
 #define DEFINE_WHEREAMI_MACRO
+#include <readline/readline.h>
+
 #include "cli.h"
+#include "syntax.h"
 
 using namespace std;
 
 namespace helpers {
 namespace cli {
+    char** disable_tab_completion(const char* _beginning, int _start, int _end) {
+        rl_attempted_completion_over = true;
+        return NULL;
+    }
+
+    
 char ReadYesNoChar(const std::string& _prompt,
                    const std::string& _yes,
                    const std::string& _no,
@@ -29,22 +38,26 @@ char ReadYesNoChar(const std::string& _prompt,
     }
     string prompt = _prompt + ans_tip;
 
+    using namespace helpers::syntax;
+    hide_value<rl_completion_func_t*> hv(rl_attempted_completion_function,
+                                         disable_tab_completion);
     do {
         cout << prompt;
-        char response[65536];
-        cin.getline(response, sizeof(response) / sizeof(response[0]));
-        string l_response = sLower(response);
-        if (l_response.empty()) {
+        auto_free<char> line(readline(_prompt.c_str()));
+        if (line == NULL) break;
+        if (line[0] == 0) {
             if (default_ans != 0) return default_ans;
             else continue;
         }
-        if (yes.find(response[0]) != yes.npos || yes.empty())
+        string l_response = sLower(static_cast<const char*>(line));
+        cerr << "the l_response is «" << l_response << "»\n";
+        if (yes.find(l_response[0]) != yes.npos || yes.empty())
             return _yes[0];
-        if (no.find(response[0]) != no.npos || no.empty())
+        if (no.find(l_response[0]) != no.npos || no.empty())
             return _no[0];
         // neither yes nor no are empty here
         cout << "Please input any of the chars: «" << yes << "» as «yes» or «" << no << "» as «no» in either upper or lower case and then press enter." << endl;
-    } while (!cin.eof());
+    } while (true);
     if (default_ans != 0) return default_ans;
     else throw runtime_error (__WHEREAMI__ + "> No answer provided, when required.");
 }
