@@ -182,7 +182,7 @@ int Cli::Run(const QString& _filename) {
         cmd = readCmd();
     }
     if (ModFlag) {
-        if (db.groups().isEmpty()) {
+        if (db->groups().isEmpty()) {
             cout << "The database has unsaved modifications but cannot be saved since it is empty. It will be rolled back to the last saved version.\n";
         } else {
             cout << "The database has not been saved since last modification.\n"
