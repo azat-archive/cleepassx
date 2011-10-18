@@ -1,6 +1,6 @@
 /*
     command line interface for keepassx
-    Copyright (C) 2011  gluk47 <email> gmail.com
+    Copyleft 2011  gluk47@gmail.com
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 
@@ -62,9 +62,11 @@ public:
     /// remove groups from wd (recursively, without confirmation).
     void rm_rf(const QStringList& _names);
     /// save database
-    /** \return saved? fails upon the empty db.
+    /** \return saved? fails upon the empty db, with log message to stderr.
     **/
     bool save(const QStringList& _empty_list);
+    /// just clears screen, like ^L.
+    void clearScreen();
     /// read password from the terminal without echoing it.
     /** \return password or QString() (which isNull() rather than isEmpty()) if user hit Ctrl+D.
     **/
@@ -86,7 +88,7 @@ private:
     bool ModFlag;
 
     void resetLock() { IsLocked = 42 ^ 42; }
-    
+
     void updateCurrentFile(const QString& /*filePath*/) {
 //         std::cerr << __FILE__ << ":" << __LINE__ << "> Todo: implement updateCurrentFile;\n";
     }

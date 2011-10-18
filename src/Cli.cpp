@@ -1,6 +1,6 @@
 /*
-    <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) 2011  gluk47@gmail.com
+    keepassx command line interface implementation for POSIX OSes.
+    Copyleft © 2011  gluk47@gmail.com
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -183,7 +183,7 @@ int Cli::Run(const QString& _filename) {
     }
     if (ModFlag) {
         if (db->groups().isEmpty()) {
-            cout << "The database has unsaved modifications but cannot be saved since it is empty. It will be rolled back to the last saved version.\n";
+            cout << "The database has unsaved modifications but cannot be saved since it is empty. It will be rolled back to the latest saved version.\n";
         } else {
             cout << "The database has not been saved since last modification.\n"
                  << "Would you like to save it now before exit?";
@@ -241,7 +241,9 @@ QStringList Cli::readCmd() {
     };
     if (line == NULL) {
         if (ModFlag and db->groups().isEmpty()) {
-            
+            cout << "Are you sure to exit? The database is now empty and cannot be saved because of it.\n";
+            if (ReadYesNoChar("", "y", "n", 'y') != 'y')
+                return QStringList();
         }
         cout << "Au revoir\n";
         ret.push_back("exit"); return ret;
@@ -330,6 +332,7 @@ void Cli::help() const {
          << "rm <entry> — completely remove an entry from database\n"
          << "md <group>, mkdir <group> — create a new subgroup here\n"
          << "save — save the database to disk\n"
+         << "clear, Ctrl + L — clear screen\n"
          << "help — display help\n";
 }
 void Cli::cd(const QString& _subgroup) {
@@ -582,6 +585,22 @@ QString Cli::ReadPassword(PasswdConfirm::flag _confirmation_needed) {
     if (cin) return pass;
     return QString(); //isNull, not isEmpty
 }
+void Cli::clearScreen() {
+#if 0
+    int result;
+    setupterm( NULL, STDOUT_FILENO, &result );
+    const char* cmd;
+    if (result > 0)
+        cmd = tigetstr( "clear" );
+    else {
+        cerr << "Sorry, unable to get a command for the «clear» action form the terminal\n";
+        return;
+    }
+    putp( console_clearscreen );
+#endif
+// I'm sorry, but that's far easier and does not use lots of resources, though uses more than nessessary.
+    system("clear");
+}
 void Cli::ProcessCmd(const QStringList& _) {
     if (_.empty()) return;
     if (_[0] == "ls" || _[0] == "l") ls();
@@ -602,6 +621,7 @@ void Cli::ProcessCmd(const QStringList& _) {
     else if (_[0] == "md" || _[0] == "mkdir") md(_.mid(1));
     else if (_[0] == "rd" || _[0] == "rmdir") rm_rf(_.mid(1));
     else if (_[0] == "save") save(_.mid(1));
+    else if (_[0] == "clear") clearScreen();
     else if (_[0] == "help" || _[0] == "?") help();
     else cerr << "The command «" << _[0].toStdString()
               << "» is undefined, sorry. Try «help» or «?».\n";
@@ -658,6 +678,7 @@ char* Cli::cmd_completer(const char* _beginning, int _state) {
         _("cat"), _("passwd");
         _("set"), _("create"), _("rm");
         _("save");
+        _("clear");
         _("?"), _("help");
 #undef _
     }

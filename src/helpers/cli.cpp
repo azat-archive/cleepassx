@@ -50,7 +50,6 @@ char ReadYesNoChar(const std::string& _prompt,
             else continue;
         }
         string l_response = sLower(static_cast<const char*>(line));
-        cerr << "the l_response is «" << l_response << "»\n";
         if (yes.find(l_response[0]) != yes.npos || yes.empty())
             return _yes[0];
         if (no.find(l_response[0]) != no.npos || no.empty())
