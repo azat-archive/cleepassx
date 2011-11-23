@@ -42,8 +42,8 @@ char ReadYesNoChar(const std::string& _prompt,
     hide_value<rl_completion_func_t*> hv(rl_attempted_completion_function,
                                          disable_tab_completion);
     do {
-        cout << prompt;
-        auto_free<char> line(readline(_prompt.c_str()));
+//         cout << prompt;
+        auto_free<char> line(readline(prompt.c_str()));//_prompt.c_str()));
         if (line == NULL) break;
         if (line[0] == 0) {
             if (default_ans != 0) return default_ans;

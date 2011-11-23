@@ -33,7 +33,11 @@ class Cli : public QObject {
     Q_OBJECT
 public:
     int Run(const QString& _filename);
+#ifdef IN_KDEVELOP_PARSER
+    IDatabase* db;
+#else
     std::auto_ptr<IDatabase> db;
+#endif
     inline bool isLocked() { return IsLocked; };
     ~Cli() { closeDatabase(); }
 
@@ -75,6 +79,7 @@ public:
     void help() const;
 
     static Cli& the();
+    IGroupHandle* Wd() const throw() { return _Wd; }
 protected:
     /// Use singleton function the() to get the object of this type.
     Cli() : _Wd(NULL), _Previous_Wd(NULL) {}
@@ -96,7 +101,7 @@ private:
     void setStateFileOpen(bool _) { FileOpen = _; }
     void setStateFileModified(bool _) { ModFlag = _; }
 
-    void search();
+    void search(const QStringList& _request);
     /**
      * @brief Read another user command.
      * @return user request, where the first list item is command, all others are the arguments. returns list {"exit"} upon EOF.
@@ -104,7 +109,7 @@ private:
     QStringList readCmd();
     void ProcessCmd (const QStringList&);
 
-    IGroupHandle* _Wd; ///< current path in the DB. nullptr means root.
+    IGroupHandle* _Wd; ///< current path in the DB. nullptr means root.`
     IGroupHandle* _Previous_Wd; ///< for command „back“ („p“);
     QString _Filename; ///< currently opened file
     QString _Lockfile; ///< _Filename's lock file

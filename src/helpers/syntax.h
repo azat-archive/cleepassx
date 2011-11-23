@@ -38,7 +38,14 @@ namespace syntax {
     };
 
     // I'm sorry, but I've read Alexandrescu and cannot help using it...
-    // This type can be used to overload functions depending on on their return type or to partially instantiate template functions via fake overloading
+    // This type can be used to overload functions depending on their return type or to partially instantiate template functions via fake overloading
     template <typename T> struct Type{};
+}
+namespace qt {
+    inline QString expandTilde (QString s) {
+    if (s.startsWith ("~/"))
+        s.replace (0, 1, QDir::homePath());
+    return s;
+}
 }
 }

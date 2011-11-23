@@ -32,11 +32,18 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include <cerrno>
+#include <cstring>
+#include <ctime>
+
 #include <termios.h>
 #include <unistd.h>
 #include <qmap.h>
+#include <qfileinfo.h>
+#include <qdir.h>
 
 using namespace helpers::cli;
+using namespace helpers;
 using namespace std;
 
 void enable_echo(bool on = true) {
@@ -91,6 +98,8 @@ bool Cli::openDatabase(const QString& filename, bool IsAuto) {
     _Lockfile = filename + ".lock";
     if (QFile::exists(_Lockfile)) {
         dbReadOnly = true;
+//         char ignbuf[8];
+//         cin.readsome(ignbuf, 7);
         const char readonly_ans =
             ReadYesNoChar(tr("The database you are trying to open is locked.\n"
                 "This means that either someone else has opened the file or KeePassX crashed last time it opened the database.\n\n"
@@ -187,38 +196,55 @@ int Cli::Run(const QString& _filename) {
         } else {
             cout << "The database has not been saved since last modification.\n"
                  << "Would you like to save it now before exit?";
-            if (helpers::cli::ReadYesNoChar("", "y", "n", 'y')) {
+            if (helpers::cli::ReadYesNoChar("", "y", "n", 'y') == 'y') {
                 db->save();
                 cout << "The database has been saved.\n";
-            }
+            } else
+                cout << "The database has been closed, all unsaved modifications have been declined.\n";
         }
     }
     closeDatabase();
     return 0;
 }
-void Cli::search() {
+void Cli::search(const QStringList& _request) {
+    QString pattern;
+    if (_request.isEmpty()) {
+        if (ReadYesNoChar("Display all records stored in the database?",
+                          "y", "n", 'n') != 'y')
+            return;
+        pattern = "";
+    } else if(_request.size() > 1) {
+        cerr << "As for now, only one search request argument is supported.\n";
+        if (ReadYesNoChar("Look for the first pattern in the database?", "y", "n", 'y') != 'y')
+            return;
+        pattern = _request[0];
+    } else
+        pattern = _request[0];
     QList<IEntryHandle*> SearchResults =
-        db->search(NULL, "", false, false, false, NULL);
+        db->search(NULL, pattern, false, false, true, NULL);
     for (QList<IEntryHandle*>::const_iterator i = SearchResults.constBegin();
             i != SearchResults.constEnd(); ++i) {
         IGroupHandle* group = (*i)->group();
-        cerr << "\t @" << group->title().toStdString() << "\n"
-             << "\t=== " << (*i)->title().toStdString() << " ===\n"
-             << "\turl>      " << (*i)->url().toStdString() << "\n"
-             << "\tuser>     " << (*i)->username().toStdString() << "\n";
+        cerr << "\t @" << group->title() << "\n"
+             << "\t     === " << (*i)->title() << " ===\n"
+             << "\t    url> " << (*i)->url() << "\n"
+             << "\t   user> " << (*i)->username() << "\n";
         SecString passwd = (*i)->password();
         passwd.unlock();
-        cerr << "\tpass>     " << passwd.string().toStdString() << "\n";
+        cerr << "\t   pass> " << passwd.string() << "\n";
         passwd.lock();
-        cerr << "\tcomment>  " << (*i)->comment().toStdString() << "\n"
+        cerr << "\tcomment> " << (*i)->comment() << "\n"
              << "\n";
     }
 }
 QStringList Cli::readCmd() {
     QStringList ret;
-    QString prompt = "[kpx@" + _Filename + " "
-                    + (_Wd != NULL? _Wd->title(): "/")
-                    + "]$ ";
+    const QString fname = QFileInfo(*db->file()).fileName();
+    QString prompt = "[kpx@" + fname/*_Filename*/ + " "
+                    + (_Wd != NULL? _Wd->title(): "/") + "]";
+    if(ModFlag) prompt += "*";
+    if(dbReadOnly) prompt += "#";
+    prompt += "$ ";
     struct auto_free {
         auto_free(char* _) : data(_){}
         ~auto_free() { free(data); }
@@ -320,20 +346,25 @@ void Cli::ls(Cli::ls_quiet::flag _quiet) const {
     }
 }
 void Cli::help() const {
-    cout << "l, ls — list entries and groups in current group\n"
-         << "cd <subgroup>  — change current group to its subgroup\n"
-         << "cd .., s — go to parent group\n"
-         << "cd -, back, p — go to previous group (double «p» moves to previous, then back to current group)\n"
-         << "cd / — go to the root group\n"
-         << "cat <entry> — display entry information\n"
-         << "passwd <entry> — show passwd stored in entry. Use Ctrl+L to clear screen.\n"
+    cout << "l, ls — list entries and groups in the current group.\n"
+         << "cd <subgroup>  — go to a subgroup of the current group.\n"
+         << "cd .., s — go to the parent group.\n"
+         << "cd -, back, p — go to the previous group (double «p» moves to the previous group, then back to the current one).\n"
+         << "cd / — go to the root group.\n"
+         << "cat <entry> — display an entry information.\n"
+         << "passwd <entry> — show a passwd stored in the entry. Use Ctrl+L to clear screen after that.\n"
          << "set — modify a database entry. Type «set help» for details.\n"
-         << "create <entry> — create new entry. Cannot be applied to the root group.\n"
-         << "rm <entry> — completely remove an entry from database\n"
-         << "md <group>, mkdir <group> — create a new subgroup here\n"
-         << "save — save the database to disk\n"
-         << "clear, Ctrl + L — clear screen\n"
-         << "help — display help\n";
+         << "create <entry> — create new entry. Cannot be performed from the root group.\n"
+         << "rm <entry> — completely remove an entry from the database. Cannot be undone.\n"
+         << "md <group>, mkdir <group> — create a new subgroup here.\n"
+         << "save — save the database to disk.\n"
+         << "save <filename> — save the database under the new name and close the original one. The saved database remains open.\n"
+         << "clear, Ctrl + L — clear screen.\n"
+         << "find, search:\n"
+         "\twith one parameter: look through the database for the parameter,\n"
+         "\twithout parameters: display all records in the database.\n"
+         << "help — display the help.\n"
+         << "exit, Ctrl + D — shutdown the program. If the database has unsaved modifications, the prompt will be displayed.";
 }
 void Cli::cd(const QString& _subgroup) {
     if (_HSubGroups.empty()) ls(ls_quiet::yes);
@@ -370,6 +401,9 @@ void Cli::cd(const QString& _subgroup) {
     _HSubGroups.clear();
     _HEntries.clear();
 }
+QString UiString(syntax::Type<IEntryHandle>){ return "record"; }
+QString UiString(syntax::Type<IGroupHandle>){ return "group"; }
+
 template <typename T>
 QList<T*> Cli::find_in_cwd(const QString& _entry) const {
     if (_entry.isEmpty()) return QList<T*>();
@@ -377,7 +411,9 @@ QList<T*> Cli::find_in_cwd(const QString& _entry) const {
     if (lst.empty()) ls(ls_quiet::yes);
     const QList<T*> keys = lst.values(_entry);
     if (keys.empty())
-        cout << "There is no item with title «" << _entry
+        cout << "There is no "
+             << UiString(syntax::Type<T>())
+             << " with title «" << _entry
              << "» in the current group. Consider using the «l» command or try «?».\n";
     return keys;
 }
@@ -400,7 +436,21 @@ void Cli::passwd(const QString& _entry) const {
         SecString passwd = (*i)->password();
         passwd.unlock();
         cout << (*i)->title() << "> " << passwd.string() << "\n";
+        // sometimes they say I'm too talkative...
+        const size_t eloquicity = 9;
+        const char* hello[eloquicity] = {
+            "Remember: ctrl+L clears screen!",
+            "To clear screen, you can use ctrl + L.",
+            "BTW. If you press Ctrl+L, the screen will be cleared.",
+            "ONLY TODAY! TRY IT NOW! Just press ctrl+L — and the password will disappear from the screen!",
+            "As you may remember, ctrl+L still allows you to clear screen",
+            "Cast Ctrl+L to banish everything from the display",
+            "R u sure noone behind you's watching ur password? Ctrl+L might help u.",
+            "Consider using Ctrl+L when you no longer need the password to clear screen",
+            "Ctrl+L will be glad to clear screen for you anytime you wish"
+        };
         passwd.lock();
+        cout << hello[unsigned(time(0)) % eloquicity] << "\n";
     }
 }
 template<typename T>
@@ -522,20 +572,16 @@ void Cli::rm(const QStringList& _entries) {
         IEntryHandle* const _ = confirm_first<IEntryHandle>(_entries[i]);
         if (_ == NULL) continue;
         db->deleteEntry(_);
+        ModFlag = true;
         _HEntries.remove(_entries[i], _);
     }
-    ModFlag = true;
 }
 void Cli::rm_rf(const QStringList& _names) {
     if (_HSubGroups.isEmpty()) ls(ls_quiet::yes);
     for (size_t i = 0; i < _names.size(); ++i) {
         IGroupHandle* _ = confirm_first<IGroupHandle>(_names[i]);
-        if (_ == NULL) {
-            cerr << "There is no subgroup «"
-                 << _names[i] << "» in the current group,\n"
-                 << "use «ls» to get the full list.\n";
+        if (_ == NULL)
             continue;
-        }
         if (_HSubGroups.size() == 1) {
             cout << "You are about to delete the last group in the database. You won't be able to save it until some new group is created. If you wish to save the database now, enter «n», otherwise answer «y» to continue deletion";
             if (ReadYesNoChar("", "y", "n", 'y') != 'y') return;
@@ -548,10 +594,28 @@ void Cli::rm_rf(const QStringList& _names) {
         ModFlag = true;
     }
 }
-bool Cli::save(const QStringList& _empty_list) {
-    if (not _empty_list.isEmpty()) {
-        cerr << "The command «save» has no parameters. If you meant «save as...», by now you'll have to do it using your shell, I'm sorry. Some update will enable the «save as...» semantics, but later.\n";
+bool Cli::save(const QStringList& _filename) {
+    if (_filename.size() > 1) {
+        cerr << "The command «save» may have one parameter: a new file name. In this case it associates the opened db with the new filename and saves it. No more parameters are supported, what did you mean?\nFeature requests are welcomed at gluk47+kpx@gmail.com\n";
         return false;
+    }
+    if (not _filename.isEmpty()) {
+        QFileInfo f(helpers::qt::expandTilde(_filename[0]));
+        QString target = f.absoluteFilePath();
+        if (target.isEmpty()) {
+            cerr << "Fail to resolve filename «" << _filename[0] << "». You should specify a filename in an existing directory without dangling symbolic links in the path. The target file may exist in which case it will be overwritten.\n";
+            return false;
+        }
+        db->changeFile(target);
+        QString oldfname = db->file()->fileName();
+        if (not db->save()) {
+            db->changeFile(oldfname);
+            cerr << "The database filename has not been changed: an attempt to save the db with the new name failed.\nSystem responce: "
+                 << strerror(errno) << "\n"
+                 "The database has not been saved at all.\n";
+        }
+//         cerr << "The command «save» has no parameters. If you meant «save as...», by now you'll have to do it using your shell, I'm sorry. Some update will enable the «save as...» semantics, but later.\n";
+        return true;
     }
     if (_Wd == NULL) {
         if (db->groups().isEmpty()) {
@@ -560,7 +624,17 @@ bool Cli::save(const QStringList& _empty_list) {
             return false;
         }
     }
-    db->save();
+    if (dbReadOnly) {
+        cerr << "The database has been opened read only. Use save as..., I mean, save with a parameter-new filename.\n";
+        return false;
+    }
+    if (db->save()) {
+        cout << "The database has been saved successfully.\n";
+        dbReadOnly = false;
+    }
+    else
+        cout << "Failed to save the database.\nSystem responce: "
+             << strerror(errno) << "\n";
     ModFlag = false;
     return true;
 }
@@ -593,12 +667,13 @@ void Cli::clearScreen() {
     if (result > 0)
         cmd = tigetstr( "clear" );
     else {
-        cerr << "Sorry, unable to get a command for the «clear» action form the terminal\n";
+        cerr << "Sorry, unable to get a command for the «clear» action from the terminal\n";
         return;
     }
     putp( console_clearscreen );
+    // fails to compile, I've given it up.
 #endif
-// I'm sorry, but that's far easier and does not use lots of resources, though uses more than nessessary.
+// I'm sorry, but that's far easier and does not use lots of resources, though uses more than nessessary. it's not inside a loop, so there's actually not too much to worry about.
     system("clear");
 }
 void Cli::ProcessCmd(const QStringList& _) {
@@ -621,6 +696,7 @@ void Cli::ProcessCmd(const QStringList& _) {
     else if (_[0] == "md" || _[0] == "mkdir") md(_.mid(1));
     else if (_[0] == "rd" || _[0] == "rmdir") rm_rf(_.mid(1));
     else if (_[0] == "save") save(_.mid(1));
+    else if (_[0] == "find" || _[0] == "search") search(_.mid(1));
     else if (_[0] == "clear") clearScreen();
     else if (_[0] == "help" || _[0] == "?") help();
     else cerr << "The command «" << _[0].toStdString()
@@ -650,6 +726,8 @@ char** Cli::tab_complete(const char* _beginning, int _start, int /*_end*/) {
             return rl_completion_matches(_beginning, entries_completer);
         return NULL; 
     }
+    if (user_input.startsWith("save "))
+        rl_attempted_completion_over = false;
     return NULL;
 }
 char* complete(const char* _beginning, const QStringList& _list, int& _start) {
@@ -671,15 +749,21 @@ char* Cli::dir_completer(const char* _beginning, int _state) {
 }
 QStringList Cli::_AllCmds;
 char* Cli::cmd_completer(const char* _beginning, int _state) {
-    if (_AllCmds.empty()) {
+    static IGroupHandle* prev_wd = NULL;
+    if (_AllCmds.empty() or prev_wd != the().Wd()) {
 #define _(cmd) _AllCmds.push_back(cmd)
         _("cd"), _("s"), _("p");
         _("l"), _("ls"); _("mkdir"), _("rmdir");
-        _("cat"), _("passwd");
-        _("set"), _("create"), _("rm");
+        if (the().Wd() != NULL) {
+            _("cat"), _("passwd");
+            _("set"), _("create"), _("rm");
+        }
         _("save");
         _("clear");
+        _("find"), _("search");
         _("?"), _("help");
+        _("exit");
+        prev_wd = the().Wd();
 #undef _
     }
     static int i; if (_state == 0) i = -1;
