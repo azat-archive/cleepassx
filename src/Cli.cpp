@@ -46,6 +46,8 @@ using namespace helpers::cli;
 using namespace helpers;
 using namespace std;
 
+const char* Cli::version = "0.2";
+
 void enable_echo(bool on = true) {
     termios settings;
     tcgetattr( STDIN_FILENO, &settings );
@@ -65,6 +67,22 @@ const char* Qstring2constchars(const QString& _) {
 }
 char* strdup(const QString& _) {
     return strdup(Qstring2constchars(_));
+}
+void ClsReminder() {
+    // sometimes they say I'm too talkative...
+    const size_t eloquicity = 9;
+    const char* hello[eloquicity] = {
+        "Remember: ctrl+L clears screen!",
+        "To clear screen, you can use ctrl + L.",
+        "BTW. If you press Ctrl+L, the screen will be cleared.",
+        "ONLY TODAY! TRY IT NOW! Just press ctrl+L — and the password will disappear from the screen!",
+        "As you may remember, ctrl+L still allows you to clear screen",
+        "Cast Ctrl+L to banish everything from the display",
+        "R u sure noone behind you's watching ur password? Ctrl+L might help u.",
+        "Consider using Ctrl+L when you no longer need the password to clear screen",
+        "Ctrl+L will be glad to clear screen for you anytime you wish"
+    };
+    cout << hello[unsigned(time(0)) % eloquicity] << "\n";
 }
 
 Cli& Cli::the() {
@@ -177,8 +195,29 @@ void Cli::saveLastFilename(const QString& filename) {
             config->setLastFile(filename);
     }
 }
+bool Cli::saveUnsaved() {
+    if (not ModFlag)
+        return true;
+    if (db->groups().isEmpty()) {
+        cout << "The database has unsaved modifications but cannot be saved since it is empty. It will be rolled back to the latest saved version.\n";
+    } else {
+        cout << "The database has not been saved since last modification.\n"
+                << "Would you like to save it now before exit?";
+        if (helpers::cli::ReadYesNoChar("", "y", "n", 'y') == 'y') {
+            if (db->save())
+                cout << "The database has been saved.\n";
+            else {
+                cout << "Failed to save the database, exit cancelled.\n"
+                     "Consider using «save as», save with a new file name as a parameter.\n";
+                return false;
+            }
+        } else
+            cout << "The database has been closed, all unsaved modifications have been declined.\n";
+    }
+    return true;
+}
 int Cli::Run(const QString& _filename) {
-    std::cout << "cli is under construction\n";
+    std::cout << "Launching keepassx cli v" << version << "...\n";
     std::cout << "class Cli> openDatabase ("
               << _filename.toStdString() << ")\n";
     bool opened = openDatabase(_filename);
@@ -186,22 +225,14 @@ int Cli::Run(const QString& _filename) {
     if (not opened) return 1;
     QStringList cmd = readCmd();
     while (true) {
-        if (not cmd.empty() and cmd[0] == "exit") break;
-        ProcessCmd(cmd);
-        cmd = readCmd();
-    }
-    if (ModFlag) {
-        if (db->groups().isEmpty()) {
-            cout << "The database has unsaved modifications but cannot be saved since it is empty. It will be rolled back to the latest saved version.\n";
-        } else {
-            cout << "The database has not been saved since last modification.\n"
-                 << "Would you like to save it now before exit?";
-            if (helpers::cli::ReadYesNoChar("", "y", "n", 'y') == 'y') {
-                db->save();
-                cout << "The database has been saved.\n";
-            } else
-                cout << "The database has been closed, all unsaved modifications have been declined.\n";
+        if (not cmd.empty()
+            and cmd[0] == "exit") {
+            if (saveUnsaved())
+                break;
         }
+        else
+            ProcessCmd(cmd);
+        cmd = readCmd();
     }
     closeDatabase();
     return 0;
@@ -236,6 +267,7 @@ void Cli::search(const QStringList& _request) {
         cerr << "\tcomment> " << (*i)->comment() << "\n"
              << "\n";
     }
+    ClsReminder();
 }
 QStringList Cli::readCmd() {
     QStringList ret;
@@ -403,7 +435,6 @@ void Cli::cd(const QString& _subgroup) {
 }
 QString UiString(syntax::Type<IEntryHandle>){ return "record"; }
 QString UiString(syntax::Type<IGroupHandle>){ return "group"; }
-
 template <typename T>
 QList<T*> Cli::find_in_cwd(const QString& _entry) const {
     if (_entry.isEmpty()) return QList<T*>();
@@ -436,21 +467,8 @@ void Cli::passwd(const QString& _entry) const {
         SecString passwd = (*i)->password();
         passwd.unlock();
         cout << (*i)->title() << "> " << passwd.string() << "\n";
-        // sometimes they say I'm too talkative...
-        const size_t eloquicity = 9;
-        const char* hello[eloquicity] = {
-            "Remember: ctrl+L clears screen!",
-            "To clear screen, you can use ctrl + L.",
-            "BTW. If you press Ctrl+L, the screen will be cleared.",
-            "ONLY TODAY! TRY IT NOW! Just press ctrl+L — and the password will disappear from the screen!",
-            "As you may remember, ctrl+L still allows you to clear screen",
-            "Cast Ctrl+L to banish everything from the display",
-            "R u sure noone behind you's watching ur password? Ctrl+L might help u.",
-            "Consider using Ctrl+L when you no longer need the password to clear screen",
-            "Ctrl+L will be glad to clear screen for you anytime you wish"
-        };
         passwd.lock();
-        cout << hello[unsigned(time(0)) % eloquicity] << "\n";
+        ClsReminder();
     }
 }
 template<typename T>
@@ -613,8 +631,10 @@ bool Cli::save(const QStringList& _filename) {
             cerr << "The database filename has not been changed: an attempt to save the db with the new name failed.\nSystem responce: "
                  << strerror(errno) << "\n"
                  "The database has not been saved at all.\n";
+        } else {
+            cout << "The database has been saved successfully.\n";
+            ModFlag = false;
         }
-//         cerr << "The command «save» has no parameters. If you meant «save as...», by now you'll have to do it using your shell, I'm sorry. Some update will enable the «save as...» semantics, but later.\n";
         return true;
     }
     if (_Wd == NULL) {
@@ -631,11 +651,12 @@ bool Cli::save(const QStringList& _filename) {
     if (db->save()) {
         cout << "The database has been saved successfully.\n";
         dbReadOnly = false;
+        ModFlag = false;
     }
-    else
+    else {
         cout << "Failed to save the database.\nSystem responce: "
              << strerror(errno) << "\n";
-    ModFlag = false;
+    }
     return true;
 }
 QString Cli::ReadPassword(PasswdConfirm::flag _confirmation_needed) {

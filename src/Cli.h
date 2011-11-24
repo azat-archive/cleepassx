@@ -32,6 +32,7 @@
 class Cli : public QObject {
     Q_OBJECT
 public:
+    static const char* version;
     int Run(const QString& _filename);
 #ifdef IN_KDEVELOP_PARSER
     IDatabase* db;
@@ -83,6 +84,9 @@ public:
 protected:
     /// Use singleton function the() to get the object of this type.
     Cli() : _Wd(NULL), _Previous_Wd(NULL) {}
+    /// Save the database if it has unsaved modifications
+    /// \return whether everithing is okay
+    bool saveUnsaved();
 
 private:
     bool openDatabase(const QString& filename, bool IsAuto = false);
@@ -109,7 +113,7 @@ private:
     QStringList readCmd();
     void ProcessCmd (const QStringList&);
 
-    IGroupHandle* _Wd; ///< current path in the DB. nullptr means root.`
+    IGroupHandle* _Wd; ///< current path in the DB. nullptr means root.
     IGroupHandle* _Previous_Wd; ///< for command „back“ („p“);
     QString _Filename; ///< currently opened file
     QString _Lockfile; ///< _Filename's lock file

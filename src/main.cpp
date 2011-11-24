@@ -284,7 +284,7 @@ bool CmdLineArgs::parse(const QStringList& argv){
 		}
 		if(argv[i] == "-cli"){
             UseCli = true;
-            cerr << "Using CLI [experimantal]...\n";
+            cerr << "Using CLI [experimental]...\n";
             continue;
         }
 		if(i==1 && argv[i].left(1)!="-"){
@@ -304,7 +304,7 @@ void CmdLineArgs::printHelp(){
 	cerr << "  -cfg <CONFIG>     Use specified file for loading/saving the configuration." << endl;
 	cerr << "  -min              Start minimized." << endl;
 	cerr << "  -lock             Start locked." << endl
-         << "  -cli              Start in command line mode [experimantal].\n";
+         << "  -cli              Start in command line mode [experimental].\n";
 }
 
 
