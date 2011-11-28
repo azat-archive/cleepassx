@@ -55,6 +55,27 @@ int main(int argc, char **argv)
     using std::cerr;
 	setlocale(LC_CTYPE, "");
 
+	if (argc > 1) {
+		int go = 0;
+		string arg = argv[1];
+		if (arg == "-help"
+			or arg == "-h"
+			or arg == "--help"
+			or arg == "--usage")
+			CmdLineArgs::printHelp();
+		else if (arg == "-v"
+				or arg == "--version")
+			cout << "keepassx 0.4.3 with command line interface of version "
+				 << Cli::version << "\n";
+		else if (arg == "-cli" and argc < 3)
+			cerr << "You have to specify the file name at the command line, such as:\n"
+				 << argv[0] << " -cli ~/passwords.kdb\n",
+			go = 1;
+		else go = -1;
+		if (go != -1)
+			return go;
+	}
+
     if (argc == 3) {
         initYarrow(); //init random number generator
         SecString::generateSessionKey();
@@ -205,8 +226,6 @@ int main(int argc, char **argv)
 	SecString::generateSessionKey();
 	
 	installTranslator();
-    if (UseCli) 
-        return Cli::the().Run(args.file());
 
     loadImages();
     DetailViewTemplate=config->detailViewTemplate();
@@ -284,7 +303,6 @@ bool CmdLineArgs::parse(const QStringList& argv){
 		}
 		if(argv[i] == "-cli"){
             UseCli = true;
-            cerr << "Using CLI [experimental]...\n";
             continue;
         }
 		if(i==1 && argv[i].left(1)!="-"){
