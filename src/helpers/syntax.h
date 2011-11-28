@@ -1,4 +1,5 @@
 #pragma once
+#include <iosfwd>
 
 namespace helpers {
 namespace syntax {
@@ -43,9 +44,12 @@ namespace syntax {
 }
 namespace qt {
     inline QString expandTilde (QString s) {
-    if (s.startsWith ("~/"))
-        s.replace (0, 1, QDir::homePath());
-    return s;
-}
+        if (s.startsWith ("~/"))
+            s.replace (0, 1, QDir::homePath());
+        return s;
+    }
+    inline std::ostream& operator<< (std::ostream& _str, const QString& _qstr) {
+        return _str << _qstr.toLocal8Bit().constData();
+    }
 }
 }

@@ -5,6 +5,7 @@
 #include "syntax.h"
 
 using namespace std;
+using namespace helpers::qt;
 
 namespace helpers {
 namespace cli {
@@ -55,7 +56,12 @@ char ReadYesNoChar(const std::string& _prompt,
         if (no.find(l_response[0]) != no.npos || no.empty())
             return _no[0];
         // neither yes nor no are empty here
-        cout << "Please input any of the chars: «" << yes << "» as «yes» or «" << no << "» as «no» in either upper or lower case and then press enter." << endl;
+        cout << QObject::tr("Please input any of the chars: «")
+             << yes
+             << QObject::tr("» as «yes» or «")
+             << no
+             << QObject::tr("» as «no» in either upper or lower case and then press enter.")
+             << endl;
     } while (true);
     if (default_ans != 0) return default_ans;
     else throw runtime_error (__WHEREAMI__ + "> No answer provided, when required.");

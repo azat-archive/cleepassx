@@ -46,7 +46,11 @@ public:
     /// list contents of current group (items&subgroups)
     /// if (_quiet) prints nothing, just updates the cache of _HSubGroups
     struct ls_quiet { enum flag { no = false, yes = true }; };
-    void ls(ls_quiet::flag _quiet = ls_quiet::no) const;
+    void ls(IGroupHandle* const _dir, ls_quiet::flag _quiet = ls_quiet::no) const;
+    void ls(ls_quiet::flag _quiet = ls_quiet::no) const {
+        return ls(_Wd, _quiet);
+    }
+    inline void ls(const QStringList& _args) const;
     /// change current group to its subgroup. Think of it as of changing cwd.
     void cd(const QString& _subgroup);
     /// list all entries or groups in cwd with title _entry
@@ -87,6 +91,7 @@ protected:
     /// Save the database if it has unsaved modifications
     /// \return whether everithing is okay
     bool saveUnsaved();
+    void ClsReminder() const;
 
 private:
     bool openDatabase(const QString& filename, bool IsAuto = false);
@@ -115,8 +120,8 @@ private:
 
     IGroupHandle* _Wd; ///< current path in the DB. nullptr means root.
     IGroupHandle* _Previous_Wd; ///< for command „back“ („p“);
-    QString _Filename; ///< currently opened file
-    QString _Lockfile; ///< _Filename's lock file
+    QString _Lockfile; ///< Current lock file
+    bool _Created; ///< The database has been just created and needs to be deleted if the user chooses to exit without saving.
 
     ///subgroup handles. Formed by ls call, then cached until cd.
     mutable QMultiMap<QString,IGroupHandle*> _HSubGroups;
@@ -138,6 +143,9 @@ private:
     inline QMultiMap<QString,T*> _Wd_map() const {
         return _Wd_map(helpers::syntax::Type<T>());
     }
+
+    inline QString UiString(helpers::syntax::Type<IGroupHandle>) const;
+    inline QString UiString(helpers::syntax::Type<IEntryHandle>) const;
 
     //======== GNU Readline interfaces ========
     static char** tab_complete(const char* _beginning, int _start, int _end);

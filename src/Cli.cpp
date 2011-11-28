@@ -42,11 +42,12 @@
 #include <qfileinfo.h>
 #include <qdir.h>
 
-using namespace helpers::cli;
 using namespace helpers;
+using namespace helpers::cli;
+using namespace helpers::qt;
 using namespace std;
 
-const char* Cli::version = "0.2";
+const char* Cli::version = "0.2.2";
 
 void enable_echo(bool on = true) {
     termios settings;
@@ -61,43 +62,50 @@ struct tmp_echo_disable {
     tmp_echo_disable(){ enable_echo(false); }
     ~tmp_echo_disable() { enable_echo(true); cout << "\n"; }
 };
-
 const char* Qstring2constchars(const QString& _) {
     return _.toUtf8().constData();
 }
 char* strdup(const QString& _) {
     return strdup(Qstring2constchars(_));
 }
-void ClsReminder() {
+void Cli::ClsReminder() const {
     // sometimes they say I'm too talkative...
     const size_t eloquicity = 9;
-    const char* hello[eloquicity] = {
-        "Remember: ctrl+L clears screen!",
-        "To clear screen, you can use ctrl + L.",
-        "BTW. If you press Ctrl+L, the screen will be cleared.",
-        "ONLY TODAY! TRY IT NOW! Just press ctrl+L — and the password will disappear from the screen!",
-        "As you may remember, ctrl+L still allows you to clear screen",
-        "Cast Ctrl+L to banish everything from the display",
-        "R u sure noone behind you's watching ur password? Ctrl+L might help u.",
-        "Consider using Ctrl+L when you no longer need the password to clear screen",
-        "Ctrl+L will be glad to clear screen for you anytime you wish"
+    QString hello[eloquicity] = {
+        tr("Remember: ctrl+L clears screen!"),
+        tr("To clear screen, you can use ctrl + L."),
+        tr("BTW. If you press Ctrl+L, the screen will be cleared."),
+        tr("ONLY TODAY! TRY IT NOW! Just press ctrl+L — and the password will disappear from the screen!"),
+        tr("As you may remember, ctrl+L still allows you to clear screen"),
+        tr("Cast Ctrl+L to banish everything from the display"),
+        tr("R u sure noone behind you's watching ur password? Ctrl+L might help u."),
+        tr("Consider using Ctrl+L when you no longer need the password to clear screen"),
+        tr("Ctrl+L will be glad to clear screen for you anytime you wish")
     };
     cout << hello[unsigned(time(0)) % eloquicity] << "\n";
+}
+struct utf8 {
+    QString Data;
+    utf8(const QString& _) : Data(_) {}
+    utf8(IGroupHandle* _) : Data(_ != NULL? _->title() : "/") {}
+    utf8(const char* _) : Data(QString::fromUtf8(_)) {}
+    operator const QString&() const { return Data; }
+};
+ostream& operator<< (ostream& _str, const utf8& _text) {
+    return _str << _text.Data.toUtf8().data();
 }
 
 Cli& Cli::the() {
     static Cli interface;
     return interface;
 }
-std::ostream& operator<< (std::ostream& _str, const QString& _qstr) {
-    return _str << _qstr.toUtf8().constData();
-}
 bool Cli::openDatabase(const QString& filename, bool IsAuto) {
+    rl_attempted_completion_function = tab_complete;
     if (!QFile::exists(filename)){
-        cout << __WHEREAMI__ << "> File «"
-             << filename << "» was not found." << endl;
+        cout << __WHEREAMI__ << "> " <<  tr("File «")
+             << filename << tr("» was not found.") << endl;
 //         return false;
-        cout << "Would you like to create there a new database? ";
+        cout << tr("Would you like to create there a new database? ");
         if (ReadYesNoChar("", "y", "n", 'y') != 'y')
             return false;
         db.reset(new Kdb3Database(true));
@@ -107,12 +115,14 @@ bool Cli::openDatabase(const QString& filename, bool IsAuto) {
         db->setKey(passwd, "");
         db->generateMasterKey();
         QStringList initial_groups;
-        initial_groups.push_back("Internet");
-        initial_groups.push_back("eMail");
+        initial_groups.push_back(tr("Internet", "default group title"));
+        initial_groups.push_back(tr("eMail", "default group title"));
         md(initial_groups);
         db->save();
+        _Created = true;
         return true;
     }
+    _Created = false;
     _Lockfile = filename + ".lock";
     if (QFile::exists(_Lockfile)) {
         dbReadOnly = true;
@@ -138,7 +148,7 @@ bool Cli::openDatabase(const QString& filename, bool IsAuto) {
     }
     QString pass = ReadPassword(PasswdConfirm::no);
     if (pass.isNull()) {
-        cout << "Failed to get the database password.\nAu revoir!\n";
+        cout << tr("Failed to get the database password.\nAu revoir!") << "\n";
         return false;
     }
     db->setKey(pass, "");
@@ -164,10 +174,6 @@ bool Cli::openDatabase(const QString& filename, bool IsAuto) {
             return false;
         }
     }
-    size_t last_slash = filename.lastIndexOf("/");
-    if (last_slash != - 1) _Filename = filename.mid(last_slash + 1);
-    else _Filename = filename;
-    rl_attempted_completion_function = tab_complete;
     return true;
 }
 void Cli::closeDatabase() {
@@ -199,25 +205,29 @@ bool Cli::saveUnsaved() {
     if (not ModFlag)
         return true;
     if (db->groups().isEmpty()) {
-        cout << "The database has unsaved modifications but cannot be saved since it is empty. It will be rolled back to the latest saved version.\n";
+        cout << tr("The database has unsaved modifications but cannot be saved since it is empty. It will be rolled back to the latest saved version.") << "\n";
     } else {
-        cout << "The database has not been saved since last modification.\n"
-                << "Would you like to save it now before exit?";
+        cout << tr("The database has not been saved since last modification.\n"
+                   "Would you like to save it now before exit?");
         if (helpers::cli::ReadYesNoChar("", "y", "n", 'y') == 'y') {
             if (db->save())
-                cout << "The database has been saved.\n";
+                cout << tr("The database has been saved.") << "\n";
             else {
-                cout << "Failed to save the database, exit cancelled.\n"
-                     "Consider using «save as», save with a new file name as a parameter.\n";
+                cout << tr("Failed to save the database, exit cancelled.\n"
+                     "Consider using «save as», save with a new file name as a parameter.") << "\n";
                 return false;
             }
-        } else
-            cout << "The database has been closed, all unsaved modifications have been declined.\n";
+        } else {
+            cout << tr("The database has been closed, all unsaved modifications have been declined.")
+                 << "\n";
+            if (_Created)
+                db->file()->remove();
+        }
     }
     return true;
 }
 int Cli::Run(const QString& _filename) {
-    std::cout << "Launching keepassx cli v" << version << "...\n";
+    std::cout << tr("Launching keepassx cli v") << version << "...\n";
     std::cout << "class Cli> openDatabase ("
               << _filename.toStdString() << ")\n";
     bool opened = openDatabase(_filename);
@@ -272,7 +282,7 @@ void Cli::search(const QStringList& _request) {
 QStringList Cli::readCmd() {
     QStringList ret;
     const QString fname = QFileInfo(*db->file()).fileName();
-    QString prompt = "[kpx@" + fname/*_Filename*/ + " "
+    QString prompt = "[kpx@" + fname + " "
                     + (_Wd != NULL? _Wd->title(): "/") + "]";
     if(ModFlag) prompt += "*";
     if(dbReadOnly) prompt += "#";
@@ -284,22 +294,9 @@ QStringList Cli::readCmd() {
         char operator[](size_t _) const { return data[_]; }
         char* data;
     } line (readline(Qstring2constchars(prompt)));
-    struct read_last_endl {
-        ~read_last_endl() {
-            istream::char_type c = 0;
-            while (not cin.readsome(&c, 1) > 0) {
-                cerr << "Skipping char #" << (int)c << "\n";
-                if (c != '\n' and c != '\r') {
-                    cerr << "unget\n";
-                    cin.unget();
-                    return;
-                } 
-            }
-        }
-    };
     if (line == NULL) {
         if (ModFlag and db->groups().isEmpty()) {
-            cout << "Are you sure to exit? The database is now empty and cannot be saved because of it.\n";
+            cout << tr("Are you sure to exit? The database is now empty and cannot be saved because of it.") << "\n";
             if (ReadYesNoChar("", "y", "n", 'y') != 'y')
                 return QStringList();
         }
@@ -316,6 +313,7 @@ QStringList Cli::readCmd() {
     size_t i;
     char quote = 0;
     QString lexem;
+    bool char_escaped = false;
     for (i = lexem_start; line[i] != 0; ++i) {
         const char c = line[i];
         if (quote != 0) {
@@ -328,7 +326,11 @@ QStringList Cli::readCmd() {
             }
             continue;
         } else {
-            if (c == '\'' or c == '"') {
+            if ((c == '\'' or c == '"')
+                and not
+                (ret.size() > 1
+                 and ret[1] != "passwd")
+               ){
                 quote = c;
                 if (i > lexem_start + 1) {
                     lexem += QString::fromUtf8(line + lexem_start,
@@ -351,52 +353,86 @@ QStringList Cli::readCmd() {
         i = lexem_start - 1;
     }
     if (lexem_start < i) {
-        if (quote != 0) cerr << "warning: autoclosing quote!\n";
+        if (quote != 0) cerr << tr("warning: autoclosing quote!") << "\n";
         lexem += QString::fromUtf8(line + lexem_start, i - lexem_start);
     }
     if (not lexem.isEmpty()) ret.push_back(lexem);
     return ret;
 }
-void Cli::ls(Cli::ls_quiet::flag _quiet) const {
+void Cli::ls(IGroupHandle* const _dir, Cli::ls_quiet::flag _quiet) const {
     QList<IGroupHandle*> group = db->groups();
-    _HSubGroups.clear();
+    if (_dir == _Wd)
+        _HSubGroups.clear();
+    else if (_quiet == ls_quiet::yes) {
+        cerr << "[debug] ls(_dir != _Wd, ls_quiet::yes) has no effect, check you code.\n";
+        return;
+    }
     for (QList<IGroupHandle*>::const_iterator i = group.constBegin();
          i != group.constEnd(); ++i) {
-        if ((*i)->parent() != _Wd)
+        if ((*i)->parent() != _dir)
             continue;
-        _HSubGroups.insert((*i)->title(), *i);
-        if (not _quiet) cout << "+ " << (*i)->title() << "\n";
+        if (_dir == _Wd) _HSubGroups.insert((*i)->title(), *i);
+        if (not _quiet) cout << "+ " << (utf8)(*i)->title() << "\n";
     }
 
-    if (_Wd == NULL) return;
-    QList<IEntryHandle*> entries = db->entries(_Wd);
+    if (_dir == NULL) return;
+    QList<IEntryHandle*> entries = db->entries(_dir);
     _HEntries.clear();
     for (QList<IEntryHandle*>::const_iterator i = entries.constBegin();
          i != entries.constEnd(); ++i) {
-        _HEntries.insert((*i)->title(), *i);
-        if (not _quiet) cout << "⋅ " << (*i)->title() << "\n";
+        if (_dir == _Wd) _HEntries.insert((*i)->title(), *i);
+        if (not _quiet) cout << "⋅ " << (utf8)(*i)->title() << "\n";
+    }
+}
+void Cli::ls(const QStringList& _args) const {
+    if (_args.isEmpty()) {
+        ls();
+        return;
+    }
+    for (size_t i = 0; i < _args.size(); ++i) {
+        if (_args[i] == "/") {
+            cerr << "=== / ===\n";
+            ls(NULL);
+            continue;
+        }
+        if (_args[i] == "..") {
+            if (_Wd == NULL) {
+                cerr << tr("We're in the root group, there is no parent here. What did you mean?") << "\n";
+            } else {
+                IGroupHandle* p = _Wd->parent();
+                cout << "=== " << (utf8)p << " ===\n";
+                ls(p);
+            }
+            continue;
+        }
+        QList<IGroupHandle*> found = find_in_cwd<IGroupHandle>(_args[i]);
+        for (QList<IGroupHandle*>::iterator i = found.begin();
+                i != found.end(); ++i) {
+            cout << "=== " << (utf8)(*i) << " ===\n";
+            ls(*i);
+        }
     }
 }
 void Cli::help() const {
-    cout << "l, ls — list entries and groups in the current group.\n"
-         << "cd <subgroup>  — go to a subgroup of the current group.\n"
-         << "cd .., s — go to the parent group.\n"
-         << "cd -, back, p — go to the previous group (double «p» moves to the previous group, then back to the current one).\n"
-         << "cd / — go to the root group.\n"
-         << "cat <entry> — display an entry information.\n"
-         << "passwd <entry> — show a passwd stored in the entry. Use Ctrl+L to clear screen after that.\n"
-         << "set — modify a database entry. Type «set help» for details.\n"
-         << "create <entry> — create new entry. Cannot be performed from the root group.\n"
-         << "rm <entry> — completely remove an entry from the database. Cannot be undone.\n"
-         << "md <group>, mkdir <group> — create a new subgroup here.\n"
-         << "save — save the database to disk.\n"
-         << "save <filename> — save the database under the new name and close the original one. The saved database remains open.\n"
-         << "clear, Ctrl + L — clear screen.\n"
-         << "find, search:\n"
+    cout << tr("l, ls — list entries and groups in the current group.\n")
+         << tr("cd <subgroup>  — go to a subgroup of the current group.\n")
+         << tr("cd .., s — go to the parent group.\n")
+         << tr("cd -, back, p — go to the previous group (double «p» moves to the previous group, then back to the current one).\n")
+         << tr("cd / — go to the root group.\n")
+         << tr("cat <entry> — display an entry information.\n")
+         << tr("passwd <entry> — show a passwd stored in the entry. Use Ctrl+L to clear screen after that.\n")
+         << tr("set — modify a database entry. Type «set help» for details.\n")
+         << tr("create <entry> — create new entry. Cannot be performed from the root group.\n")
+         << tr("rm <entry> — completely remove an entry from the database. Cannot be undone.\n")
+         << tr("md <group>, mkdir <group> — create a new subgroup here.\n")
+         << tr("save — save the database to disk.\n")
+         << tr("save <filename> — save the database under the new name and close the original one. The saved database remains open.\n")
+         << tr("clear, Ctrl + L — clear screen.\n")
+         << tr("find, search:\n"
          "\twith one parameter: look through the database for the parameter,\n"
-         "\twithout parameters: display all records in the database.\n"
-         << "help — display the help.\n"
-         << "exit, Ctrl + D — shutdown the program. If the database has unsaved modifications, the prompt will be displayed.";
+         "\twithout parameters: display all records in the database.\n")
+         << tr("help — display the help.\n")
+         << tr("exit, Ctrl + D — shutdown the program. If the database has unsaved modifications, the prompt will be displayed.");
 }
 void Cli::cd(const QString& _subgroup) {
     if (_HSubGroups.empty()) ls(ls_quiet::yes);
@@ -423,8 +459,8 @@ void Cli::cd(const QString& _subgroup) {
     }
     IGroupHandle* _ = confirm_first<IGroupHandle>(_subgroup);
     if (_ == NULL) {
-        cerr << "There is no subgroup «" << _subgroup
-             << "» in the current group.\n";
+        cerr << tr("There is no subgroup «") << _subgroup
+             << tr("» in the current group.\n");
         return;
     }
 
@@ -433,8 +469,8 @@ void Cli::cd(const QString& _subgroup) {
     _HSubGroups.clear();
     _HEntries.clear();
 }
-QString UiString(syntax::Type<IEntryHandle>){ return "record"; }
-QString UiString(syntax::Type<IGroupHandle>){ return "group"; }
+QString Cli::UiString(syntax::Type<IEntryHandle>) const { return tr("record"); }
+QString Cli::UiString(syntax::Type<IGroupHandle>) const { return tr("group"); }
 template <typename T>
 QList<T*> Cli::find_in_cwd(const QString& _entry) const {
     if (_entry.isEmpty()) return QList<T*>();
@@ -442,22 +478,22 @@ QList<T*> Cli::find_in_cwd(const QString& _entry) const {
     if (lst.empty()) ls(ls_quiet::yes);
     const QList<T*> keys = lst.values(_entry);
     if (keys.empty())
-        cout << "There is no "
+        cout << tr("There is no ")
              << UiString(syntax::Type<T>())
-             << " with title «" << _entry
-             << "» in the current group. Consider using the «l» command or try «?».\n";
+             << tr(" with title «") << (utf8)_entry
+             << tr("» in the current group. Consider using the «l» command or try «?».\n");
     return keys;
 }
 void Cli::cat(const QString& _entry) const {
     const QList<IEntryHandle*> keys = find_in_cwd<IEntryHandle>(_entry);
     for (QList<IEntryHandle*>::const_iterator i = keys.constBegin();
          i != keys.constEnd(); ++i) {
-        cout << "\t=== " << (*i)->title() << " ===\n"
-             << "\turl>      " << (*i)->url() << "\n"
-             << "\tuser>     " << (*i)->username() << "\n"
-             << "\tpass> <type «passwd " << _entry << "» to reveal the password>\n"
-             << "\tcomment>  " << (*i)->comment() << "\n"
-             << "\n";
+        cout << "\t=== " << (utf8)(*i)->title() << " ===\n"
+             << tr("\turl>      ") << (utf8)(*i)->url() << tr("\n")
+             << tr("\tuser>     ") << (utf8)(*i)->username() << tr("\n")
+             << tr("\tpass> <type «passwd ") << (utf8)_entry << tr("» to reveal the password>\n")
+             << tr("\tcomment>  ") << (utf8)(*i)->comment() << tr("\n")
+             << tr("\n");
     }
 }
 void Cli::passwd(const QString& _entry) const {
@@ -466,7 +502,7 @@ void Cli::passwd(const QString& _entry) const {
          i != keys.constEnd(); ++i) {
         SecString passwd = (*i)->password();
         passwd.unlock();
-        cout << (*i)->title() << "> " << passwd.string() << "\n";
+        cout << (utf8)(*i)->title() << "> " << (utf8)passwd.string() << "\n";
         passwd.lock();
         ClsReminder();
     }
@@ -477,29 +513,32 @@ T* Cli::confirm_first(const QString& _title) {
     if (entries.empty()) return NULL;
     ///\todo support more than one entry with the same name in one group
     if (entries.size() > 1) {
-        cout << "There is more than one record with the name «"
-                << _title << "» in the current group. ";
-        if (helpers::cli::ReadYesNoChar("The first one will be modified, is it okay?", "y", "n", 'y') == 'n') return NULL;
+        cout << tr("There is more than one record with the name «")
+                << (utf8)_title << tr("» in the current group. ");
+        if (helpers::cli::ReadYesNoChar(
+            tr("The first one will be modified, is it okay?").toStdString(),
+                                        "y", "n", 'y') == 'n') return NULL;
     }
     return entries[0];
 }
 void Cli::set(const QStringList& _params) {
     if (_params.isEmpty() or _params[0] == "help" or _params[0] == "?") {
-        cout << "\e[1m== set help ==\e[0m\n";
-        cout << "Hereafter the word «record» means the title of an existing record in the current group. List of records you can get either using command «ls» sor by pressing <Tab> twice after the whole previous part of the set command.\n";
-        cout << " \e[1m⋅\e[0m set title record new_title\n";
-        cout << " \e[1m⋅\e[0m set user record new_username\n";
-        cout << " \e[1m⋅\e[0m set passwd record new_passwd\n";
-        cout << " \e[1m⋅\e[0m set url record new_passwd\n";
-        cout << " \e[1m⋅\e[0m set comment record new_passwd\n";
-        cout << "if the last argument (new_...) is ommitted, the existing data field will be cleared, but you cannot clear title.";
+        cout << tr("\e[1m== set help ==\e[0m\n");
+        cout << tr("Hereafter the word «record» means the title of an existing record in the current group.\n"
+        "The list of the records you can get either using the command «ls» or by pressing <Tab> twice after the whole previous part of the set command.\n");
+        cout << tr(" \e[1m⋅\e[0m set title record new_title\n");
+        cout << tr(" \e[1m⋅\e[0m set user record new_username\n");
+        cout << tr(" \e[1m⋅\e[0m set passwd record new_passwd\n");
+        cout << tr(" \e[1m⋅\e[0m set url record new_passwd\n");
+        cout << tr(" \e[1m⋅\e[0m set comment record new_passwd\n");
+        cout << tr("if the last argument (new_...) is ommitted, the existing data field will be cleared, but you cannot clear title.");
         return;
     }
     if(_params.size() < 2) {
-        cerr << "You need to supply 2 or 3 parameters to the command «set "
-        << _params[0] << "»:\nset "
-        << _params[0] << " title new_" << _params[0] << "\n"
-        << "if new_" << _params[0] << " is ommitted, the existing one will be deleted.";
+        cerr << tr("You need to supply 3 parameters to the command «set ")
+        << _params[0] << tr("»:\nset ")
+        << _params[0] << tr(" title new_") << _params[0] << "\n"
+        << tr("Pass \"\" as the third argument in case you wish to clear the field. It is impossible to clear the title anyway.");
         return;
     }
     IEntryHandle* _ = confirm_first<IEntryHandle>(_params[1]);
@@ -512,16 +551,13 @@ void Cli::set(const QStringList& _params) {
         return;
     }
     if(_params.size() < 3) {
-        cerr << "You need to supply 3 parameters to the command «set "
-        << _params[0] << "»:\nset "
-        << _params[0] << " title new_" << _params[0] << "\n";
+        cerr << tr("You need to supply 3 parameters to the command «set ")
+        << _params[0] << tr("»:\nset ")
+        << _params[0] << tr(" title new_") << _params[0] << tr("\n")
+        << tr("Pass \"\" as the 3rd argument to clear the specified field. The title cannot be cleared.") << "\n";
         return;
     }
     if (_params[0] == "title") {
-        if (_params.size() < 3) {
-            cout << "You cannot delete the title of the record, sorry. I cannot do it too...";
-            return;
-        }
         _->setTitle(_params[2]);
         ModFlag = true;
         _HEntries.remove(_params[1], _);
@@ -551,15 +587,16 @@ void Cli::set(const QStringList& _params) {
 }
 void Cli::create(const QStringList& _entries) {
     if (_Wd == NULL) {
-        cout << "It is impossible to create an entry in the root group, sorry.\n";
+        cout << tr("It is impossible to create an entry in the root group, sorry.")
+             << "\n";
         return;
     }
     if (_HEntries.isEmpty()) ls(ls_quiet::yes);
     for (size_t i = 0; i < _entries.size(); ++i) {
         if (_HEntries.contains(_entries[i])) {
-            cout << "Current group already contains an item with title «"
-                 << _entries[i] << "». If you create a new one, you won't be able to modify one of the entries from this console interface of keepassx. ";
-            if (helpers::cli::ReadYesNoChar("Continue?", "y", "n", 'n') == 'n')
+            cout << tr("Current group already contains an item with title «")
+                 << _entries[i] << tr("». If you create a new one, you won't be able to modify one of the entries from this console interface of keepassx. ");
+            if (helpers::cli::ReadYesNoChar(tr("Continue?").toStdString(), "y", "n", 'n') == 'n')
                 continue;
         }
         IEntryHandle* _new = db->newEntry(_Wd);
@@ -572,9 +609,9 @@ void Cli::create(const QStringList& _entries) {
 void Cli::md(const QStringList& _entries) {
     for (size_t i = 0; i < _entries.size(); ++i) {
         if (_HSubGroups.contains(_entries[i])) {
-            cout << "Current group already contains a subgroup named «"
-                 << _entries[i] << "». If you create a new one, you won't be able to cd to one of the groups from this console interface of keepassx. ";
-            if (helpers::cli::ReadYesNoChar("Continue?", "y", "n", 'n') == 'n')
+            cout << tr("Current group already contains a subgroup named «")
+                 << (utf8)_entries[i] << tr("». If you create a new one, you won't be able to cd to one of the groups from this console interface of keepassx. ");
+            if (helpers::cli::ReadYesNoChar(tr("Continue?").toStdString(), "y", "n", 'n') == 'n')
                 continue;
         }
         CGroup newGroup;
@@ -601,10 +638,10 @@ void Cli::rm_rf(const QStringList& _names) {
         if (_ == NULL)
             continue;
         if (_HSubGroups.size() == 1) {
-            cout << "You are about to delete the last group in the database. You won't be able to save it until some new group is created. If you wish to save the database now, enter «n», otherwise answer «y» to continue deletion";
+            cout << tr("You are about to delete the last group in the database. You won't be able to save it until some new group is created. If you wish to save the database now, enter «n», otherwise answer «y» to continue deletion");
             if (ReadYesNoChar("", "y", "n", 'y') != 'y') return;
         }
-        cout << "Are you absolutely sure you wish to irrecoverably erase the whole group «" << _names[i] << "» with all its contents?";
+        cout << tr("Are you absolutely sure you wish to irrecoverably erase the whole group «") << _names[i] << tr("» with all its contents? This operation cannot be undone.");
         if (ReadYesNoChar("", "y", "n", 'n') != 'y') continue;
         db->deleteGroup(_);
         if (not _HSubGroups.isEmpty())
@@ -614,25 +651,25 @@ void Cli::rm_rf(const QStringList& _names) {
 }
 bool Cli::save(const QStringList& _filename) {
     if (_filename.size() > 1) {
-        cerr << "The command «save» may have one parameter: a new file name. In this case it associates the opened db with the new filename and saves it. No more parameters are supported, what did you mean?\nFeature requests are welcomed at gluk47+kpx@gmail.com\n";
+        cerr << tr("The command «save» may have one parameter: a new file name. In this case it associates the opened db with the new filename and saves it. No more parameters are supported, what did you mean?\nFeature requests are welcomed at gluk47+kpx@gmail.com") << "\n";
         return false;
     }
     if (not _filename.isEmpty()) {
         QFileInfo f(helpers::qt::expandTilde(_filename[0]));
         QString target = f.absoluteFilePath();
         if (target.isEmpty()) {
-            cerr << "Fail to resolve filename «" << _filename[0] << "». You should specify a filename in an existing directory without dangling symbolic links in the path. The target file may exist in which case it will be overwritten.\n";
+            cerr << tr("Fail to resolve filename «") << _filename[0] << tr("». You should specify a filename in an existing directory without dangling symbolic links in the path. The target file may exist in which case it will be overwritten.") << "\n";
             return false;
         }
         db->changeFile(target);
         QString oldfname = db->file()->fileName();
         if (not db->save()) {
             db->changeFile(oldfname);
-            cerr << "The database filename has not been changed: an attempt to save the db with the new name failed.\nSystem responce: "
+            cerr << tr("The database filename has not been changed: an attempt to save the db with the new name failed.\nSystem responce: ")
                  << strerror(errno) << "\n"
-                 "The database has not been saved at all.\n";
+                 << tr("The database has not been saved at all.\n");
         } else {
-            cout << "The database has been saved successfully.\n";
+            cout << tr("The database has been saved successfully.") << "\n";
             ModFlag = false;
         }
         return true;
@@ -640,28 +677,28 @@ bool Cli::save(const QStringList& _filename) {
     if (_Wd == NULL) {
         if (db->groups().isEmpty()) {
             // no, that's not cli limitation, db->save() just does absolutely nothing for an empty database.
-            cerr << "Sorry, it is impossible to save an empty database.\n";
+            cerr << tr("Sorry, it is impossible to save an empty database.") << "\n";
             return false;
         }
     }
     if (dbReadOnly) {
-        cerr << "The database has been opened read only. Use save as..., I mean, save with a parameter-new filename.\n";
+        cerr << tr("The database has been opened read only. Use save as..., I mean, save with a parameter-new filename.") << tr("\n");
         return false;
     }
     if (db->save()) {
-        cout << "The database has been saved successfully.\n";
+        cout << tr("The database has been saved successfully.") << tr("\n");
         dbReadOnly = false;
         ModFlag = false;
     }
     else {
-        cout << "Failed to save the database.\nSystem responce: "
-             << strerror(errno) << "\n";
+        cout << tr("Failed to save the database.\nSystem responce: ")
+             << strerror(errno) << tr("\n");
     }
     return true;
 }
 QString Cli::ReadPassword(PasswdConfirm::flag _confirmation_needed) {
     QString pass;
-   {cout << "Please, enter password: ";
+   {cout << tr("Please, enter password: ");
     tmp_echo_disable __rped__;
     string s;
     cin >> s;
@@ -671,7 +708,7 @@ QString Cli::ReadPassword(PasswdConfirm::flag _confirmation_needed) {
 
     QString confirm;
     while (confirm != pass and cin) {
-        cout << "Reenter password or hit Ctrl+D to break: ";
+        cout << tr("Reenter password or hit Ctrl+D to break: ");
         tmp_echo_disable __rped__;
         string s;
         cin >> s;
@@ -699,7 +736,7 @@ void Cli::clearScreen() {
 }
 void Cli::ProcessCmd(const QStringList& _) {
     if (_.empty()) return;
-    if (_[0] == "ls" || _[0] == "l") ls();
+    if (_[0] == "ls" || _[0] == "l") ls(_.mid(1));
     else if (_[0] == "cd") cd(_.size() > 1 ? _[1] : "/");
     else if (_[0] == "s") cd ("..");
     else if (_[0] == "p" or _[0] == "back") cd ("-");
@@ -720,23 +757,26 @@ void Cli::ProcessCmd(const QStringList& _) {
     else if (_[0] == "find" || _[0] == "search") search(_.mid(1));
     else if (_[0] == "clear") clearScreen();
     else if (_[0] == "help" || _[0] == "?") help();
-    else cerr << "The command «" << _[0].toStdString()
-              << "» is undefined, sorry. Try «help» or «?».\n";
+    else cerr << tr("The command «") << (utf8)_[0]
+              << tr("» is undefined, sorry. Try «help» or «?».")
+              << "\n";
 }
 // =================== GNU Readline interface ===================
 char** Cli::tab_complete(const char* _beginning, int _start, int /*_end*/) {
     rl_attempted_completion_over = true;
     if (_start == 0) return rl_completion_matches(_beginning, cmd_completer);
     const QString user_input = QString::fromUtf8(rl_line_buffer);
-    if (user_input.startsWith("cat ")
+    if (   user_input.startsWith("cat ")
         or user_input.startsWith("passwd ")
         or user_input.startsWith("rm ")
        ) 
         return rl_completion_matches(_beginning, entries_completer);
-    if (user_input.startsWith("cd ")
+    if (   user_input.startsWith("cd ")
         or user_input.startsWith("rd ")
         or user_input.startsWith("rmdir ")
-        )
+        or user_input.startsWith("l ")
+        or user_input.startsWith("ls ")
+       )
         return rl_completion_matches(_beginning, dir_completer);
     if (user_input.startsWith("set ")) {
         QString set_cmd = user_input.mid(4);
@@ -753,8 +793,15 @@ char** Cli::tab_complete(const char* _beginning, int _start, int /*_end*/) {
 }
 char* complete(const char* _beginning, const QStringList& _list, int& _start) {
     while (++_start < _list.size()) {
-        if (_list[_start].startsWith(QString::fromUtf8(_beginning)))
-            return strdup(_list[_start]);
+        if (_list[_start].startsWith((utf8)_beginning)) {
+            QString found(_list[_start]);
+            if (found.contains(' ')) {
+                if (found.contains('\''))
+                    found.replace('\'', "'\"'");
+                found = '"' + found + "\"";
+            }
+            return strdup(found);
+        }
     }
     return NULL;
 }
