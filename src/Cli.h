@@ -85,17 +85,19 @@ public:
 
     static Cli& the();
     IGroupHandle* Wd() const throw() { return _Wd; }
+    /// returns wheter the db needs to be saved
+    bool HasUnsavedData() const throw() { return ModFlag; }
+    /// Save the database if it has unsaved modifications
+    /// \return whether everithing is okay (user tell us not to save anything or db saved successfully)
+    bool saveUnsaved();
+    void closeDatabase();
 protected:
     /// Use singleton function the() to get the object of this type.
     Cli() : _Wd(NULL), _Previous_Wd(NULL) {}
-    /// Save the database if it has unsaved modifications
-    /// \return whether everithing is okay
-    bool saveUnsaved();
     void ClsReminder() const;
 
 private:
     bool openDatabase(const QString& filename, bool IsAuto = false);
-    void closeDatabase();
     bool dbReadOnly;
     bool IsLocked;
     bool FileOpen;
@@ -128,7 +130,7 @@ private:
     ///handles of entries in cwd. Formed by ls or cat call, then cached until cd.
     mutable QMultiMap<QString,IEntryHandle*> _HEntries;
 
-    /// find in _Wd an entry labeled _title and ask user confirmation if thre's more than one suitable. Return const ptr (no deletion must be done) to the entry or NULL.
+    /// find in _Wd an entry labeled _title and ask user confirmation if there's more than one suitable. Return const ptr (no deletion must be done) to the entry or NULL.
     /// T may be either IEntryHandle or IGroupHandle
     template <typename T>
     T* confirm_first(const QString& _title);

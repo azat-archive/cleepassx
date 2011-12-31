@@ -42,6 +42,8 @@
 #include <qfileinfo.h>
 #include <qdir.h>
 
+#include <signal.h>
+
 using namespace helpers;
 using namespace helpers::cli;
 using namespace helpers::qt;
@@ -49,6 +51,23 @@ using namespace std;
 
 const char* Cli::version = "0.2.2";
 
+void onSigInt(int) {
+    static bool first_time = true;
+    Cli& ui = Cli::the();
+    if (first_time) {
+        syntax::hide_value<bool> _flag_restorer_ (first_time, false);
+        if (ui.HasUnsavedData()) {
+            cout << "Hit Ctrl+C again to immediately terminate the program." << endl;
+            if(not ui.saveUnsaved())
+                if (ReadYesNoChar("Use Force Quit discarding unsaved modifications?",
+                    "y", "n", 'n') != 'y') 
+                    return;
+        }
+    }
+    ui.closeDatabase();
+    cout << "Adieu" << endl;
+    ::exit (0);
+}
 void enable_echo(bool on = true) {
     termios settings;
     tcgetattr( STDIN_FILENO, &settings );
@@ -90,6 +109,7 @@ struct utf8 {
     utf8(IGroupHandle* _) : Data(_ != NULL? _->title() : "/") {}
     utf8(const char* _) : Data(QString::fromUtf8(_)) {}
     operator const QString&() const { return Data; }
+    operator string() const { return string(Data.toUtf8()); }
 };
 ostream& operator<< (ostream& _str, const utf8& _text) {
     return _str << _text.Data.toUtf8().data();
@@ -177,6 +197,11 @@ bool Cli::openDatabase(const QString& filename, bool IsAuto) {
     return true;
 }
 void Cli::closeDatabase() {
+    // prevent multiple calls due to sigint
+    static bool closing_now = false;
+    if (closing_now) return;
+    closing_now = true;
+    
     if (db.get() != NULL) {
         db->close();
         db.reset();
@@ -228,6 +253,12 @@ bool Cli::saveUnsaved() {
 }
 int Cli::Run(const QString& _filename) {
     std::cout << tr("Launching keepassx cli v") << version << "...\n";
+    
+    struct sigaction act; //< wow, g++ is able to compile this! I thought it's C-only syntax.
+    memset(&act, sizeof(act), 0);
+    act.sa_handler = onSigInt;
+    sigaction(SIGINT, &act, NULL);
+    
     std::cout << "class Cli> openDatabase ("
               << _filename.toStdString() << ")\n";
     bool opened = openDatabase(_filename);
@@ -266,15 +297,15 @@ void Cli::search(const QStringList& _request) {
     for (QList<IEntryHandle*>::const_iterator i = SearchResults.constBegin();
             i != SearchResults.constEnd(); ++i) {
         IGroupHandle* group = (*i)->group();
-        cerr << "\t @" << group->title() << "\n"
-             << "\t     === " << (*i)->title() << " ===\n"
-             << "\t    url> " << (*i)->url() << "\n"
-             << "\t   user> " << (*i)->username() << "\n";
+        cerr << "\t @" << (utf8)group->title() << "\n"
+             << "\t     === " << (utf8)(*i)->title() << " ===\n"
+             << "\t    url> " << (utf8)(*i)->url() << "\n"
+             << "\t   user> " << (utf8)(*i)->username() << "\n";
         SecString passwd = (*i)->password();
         passwd.unlock();
-        cerr << "\t   pass> " << passwd.string() << "\n";
+        cerr << "\t   pass> " << (utf8)passwd.string() << "\n";
         passwd.lock();
-        cerr << "\tcomment> " << (*i)->comment() << "\n"
+        cerr << "\tcomment> " << (utf8)(*i)->comment() << "\n"
              << "\n";
     }
     ClsReminder();
@@ -534,22 +565,26 @@ void Cli::set(const QStringList& _params) {
         cout << tr("if the last argument (new_...) is ommitted, the existing data field will be cleared, but you cannot clear title.");
         return;
     }
-    if(_params.size() < 2) {
-        cerr << tr("You need to supply 3 parameters to the command «set ")
-        << _params[0] << tr("»:\nset ")
-        << _params[0] << tr(" title new_") << _params[0] << "\n"
-        << tr("Pass \"\" as the third argument in case you wish to clear the field. It is impossible to clear the title anyway.");
-        return;
-    }
     IEntryHandle* _ = confirm_first<IEntryHandle>(_params[1]);
     if (_ == NULL) return;
     if (_params[0] == "comment") {
-        if (_params.size() < 3)
-            _->setComment(QString());
+        if(_params.size() < 2) {
+            cerr << tr("You need to supply 3 parameters to the command «set ")
+            << _params[0] << tr("»:\nset ")
+            << _params[0] << tr(" title new_") << _params[0] << "\n"
+            << tr("If you pass only 2 arguments, the comment will be cleared. It is impossible to clear the title anyway.");
+            return;
+        }
+        if (_params.size() < 3) {
+            bool sure = ReadYesNoChar(tr("Is it really so, that the comment should be erased? ").toStdString(), "y", "n", 'y') == 'y';
+            if (sure)
+                _->setComment(QString());
+        }
         else
             _->setComment(_params[2]);
         return;
     }
+
     if(_params.size() < 3) {
         cerr << tr("You need to supply 3 parameters to the command «set ")
         << _params[0] << tr("»:\nset ")

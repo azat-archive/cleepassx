@@ -401,6 +401,441 @@ Haluatko varmasti poistaa sen?</translation>
     </message>
 </context>
 <context>
+    <name>Cli</name>
+    <message>
+        <source>Remember: ctrl+L clears screen!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To clear screen, you can use ctrl + L.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>BTW. If you press Ctrl+L, the screen will be cleared.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ONLY TODAY! TRY IT NOW! Just press ctrl+LÂ â and the password will disappear from the screen!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>As you may remember, ctrl+L still allows you to clear screen</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cast Ctrl+L to banish everything from the display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>R u sure noone behind you&apos;s watching ur password? Ctrl+L might help u.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Consider using Ctrl+L when you no longer need the password to clear screen</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+L will be glad to clear screen for you anytime you wish</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>File Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Â» was not found.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Would you like to create there a new database? </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Internet</source>
+        <comment>default group title</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>eMail</source>
+        <comment>default group title</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The database you are trying to open is locked.
+This means that either someone else has opened the file or KeePassX crashed last time it opened the database.
+
+Do you want to open it anyway read only?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to get the database password.
+Au revoir!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown error while loading database.</source>
+        <translation type="unfinished">Tuntematon virhe ladattaessa tietokantaa.</translation>
+    </message>
+    <message>
+        <source>The following error occured while opening the database:
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Virhe</translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t remove database lock file.</source>
+        <translation type="unfinished">Tietokannan lukkotiedostoa ei voitu poistaa.</translation>
+    </message>
+    <message>
+        <source>The database has unsaved modifications but cannot be saved since it is empty. It will be rolled back to the latest saved version.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The database has not been saved since last modification.
+Would you like to save it now before exit?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The database has been saved.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to save the database, exit cancelled.
+Consider using Â«save asÂ», save with a new file name as a parameter.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The database has been closed, all unsaved modifications have been declined.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Launching keepassx cli v</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure to exit? The database is now empty and cannot be saved because of it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>warning: autoclosing quote!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We&apos;re in the root group, there is no parent here. What did you mean?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>l, lsÂ â list entries and groups in the current group.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>cd &lt;subgroup&gt; Â â go to a subgroup of the current group.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>cd .., sÂ â go to the parent group.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>cd -, back, pÂ â go to the previous group (double Â«pÂ» moves to the previous group, then back to the current one).
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>cd /Â â go to the root group.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>cat &lt;entry&gt;Â â display an entry information.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>passwd &lt;entry&gt;Â â show a passwd stored in the entry. Use Ctrl+L to clear screen after that.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>setÂ â modify a database entry. Type Â«set helpÂ» for details.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>create &lt;entry&gt;Â â create new entry. Cannot be performed from the root group.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>rm &lt;entry&gt;Â â completely remove an entry from the database. Cannot be undone.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>md &lt;group&gt;, mkdir &lt;group&gt;Â â create a new subgroup here.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>saveÂ â save the database to disk.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>save &lt;filename&gt;Â â save the database under the new name and close the original one. The saved database remains open.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>clear, Ctrl + LÂ â clear screen.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>find, search:
+	with one parameter: look through the database for the parameter,
+	without parameters: display all records in the database.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>helpÂ â display the help.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>exit, Ctrl + DÂ â shutdown the program. If the database has unsaved modifications, the prompt will be displayed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>There is no subgroup Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Â» in the current group.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>record</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>group</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>There is no </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> with title Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Â» in the current group. Consider using the Â«lÂ» command or try Â«?Â».
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>	url&gt;      </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>	user&gt;     </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>	pass&gt; &lt;type Â«passwd </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Â» to reveal the password&gt;
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>	comment&gt;  </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>There is more than one record with the name Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Â» in the current group. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The first one will be modified, is it okay?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>e[1m== set help ==e[0m
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hereafter the word Â«recordÂ» means the title of an existing record in the current group.
+The list of the records you can get either using the command Â«lsÂ» or by pressing &lt;Tab&gt; twice after the whole previous part of the set command.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> e[1mâe[0m set title record new_title
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> e[1mâe[0m set user record new_username
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> e[1mâe[0m set passwd record new_passwd
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> e[1mâe[0m set url record new_passwd
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> e[1mâe[0m set comment record new_passwd
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>if the last argument (new_...) is ommitted, the existing data field will be cleared, but you cannot clear title.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You need to supply 3 parameters to the command Â«set </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Â»:
+set </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> title new_</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pass &quot;&quot; as the third argument in case you wish to clear the field. It is impossible to clear the title anyway.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pass &quot;&quot; as the 3rd argument to clear the specified field. The title cannot be cleared.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>It is impossible to create an entry in the root group, sorry.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Current group already contains an item with title Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Â». If you create a new one, you won&apos;t be able to modify one of the entries from this console interface of keepassx. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Continue?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Current group already contains a subgroup named Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Â». If you create a new one, you won&apos;t be able to cd to one of the groups from this console interface of keepassx. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You are about to delete the last group in the database. You won&apos;t be able to save it until some new group is created. If you wish to save the database now, enter Â«nÂ», otherwise answer Â«yÂ» to continue deletion</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you absolutely sure you wish to irrecoverably erase the whole group Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Â» with all its contents? This operation cannot be undone.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The command Â«saveÂ» may have one parameter: a new file name. In this case it associates the opened db with the new filename and saves it. No more parameters are supported, what did you mean?
+Feature requests are welcomed at gluk47+kpx@gmail.com</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fail to resolve filename Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Â». You should specify a filename in an existing directory without dangling symbolic links in the path. The target file may exist in which case it will be overwritten.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The database filename has not been changed: an attempt to save the db with the new name failed.
+System responce: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The database has not been saved at all.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The database has been saved successfully.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sorry, it is impossible to save an empty database.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The database has been opened read only. Use save as..., I mean, save with a parameter-new filename.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to save the database.
+System responce: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please, enter password: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reenter password or hit Ctrl+D to break: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The command Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Â» is undefined, sorry. Try Â«helpÂ» or Â«?Â».</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>CollectEntropyDlg</name>
     <message>
         <source>Random Number Generator</source>
@@ -1271,24 +1706,40 @@ Avain on väärä tai tiedosto on vioittunut.</translation>
         <source>The database has been opened read-only.</source>
         <translation>Tietokanta on avattu vain luettavaksi.</translation>
     </message>
+    <message>
+        <source>Bytes</source>
+        <translation type="unfinished">Tavua</translation>
+    </message>
+    <message>
+        <source>KiB</source>
+        <translation type="unfinished">KiB</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation type="unfinished">MiB</translation>
+    </message>
+    <message>
+        <source>GiB</source>
+        <translation type="unfinished">GiB</translation>
+    </message>
 </context>
 <context>
     <name>Kdb3Database::EntryHandle</name>
     <message>
         <source>Bytes</source>
-        <translation>Tavua</translation>
+        <translation type="obsolete">Tavua</translation>
     </message>
     <message>
         <source>KiB</source>
-        <translation>KiB</translation>
+        <translation type="obsolete">KiB</translation>
     </message>
     <message>
         <source>MiB</source>
-        <translation>MiB</translation>
+        <translation type="obsolete">MiB</translation>
     </message>
     <message>
         <source>GiB</source>
-        <translation>GiB</translation>
+        <translation type="obsolete">GiB</translation>
     </message>
 </context>
 <context>
@@ -2064,6 +2515,21 @@ File is not readable.</source>
     <message>
         <source>Passwords are not equal.</source>
         <translation>Salasanat eivät täsmää.</translation>
+    </message>
+</context>
+<context>
+    <name>QObject</name>
+    <message>
+        <source>Please input any of the chars: Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Â» as Â«yesÂ» or Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Â» as Â«noÂ» in either upper or lower case and then press enter.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -143,9 +143,9 @@ General Public License (GPL) version 2.</translation>
 <context>
     <name>AddBookmarkDlg</name>
     <message>
+        <location filename="../forms/AddBookmarkDlg.ui" line="32"/>
         <location filename="../dialogs/AddBookmarkDlg.cpp" line="32"/>
         <location filename="../dialogs/AddBookmarkDlg.cpp" line="56"/>
-        <location filename="../forms/AddBookmarkDlg.ui" line="32"/>
         <source>Add Bookmark</source>
         <translation>Lesezeichen hinzufügen</translation>
     </message>
@@ -516,6 +516,550 @@ Are you sure?</source>
         <location filename="../forms/CalendarDlg.ui" line="13"/>
         <source>Calendar</source>
         <translation>Kalender</translation>
+    </message>
+</context>
+<context>
+    <name>Cli</name>
+    <message>
+        <location filename="../Cli.cpp" line="75"/>
+        <source>Remember: ctrl+L clears screen!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="76"/>
+        <source>To clear screen, you can use ctrl + L.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="77"/>
+        <source>BTW. If you press Ctrl+L, the screen will be cleared.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="78"/>
+        <source>ONLY TODAY! TRY IT NOW! Just press ctrl+LÂ â and the password will disappear from the screen!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="79"/>
+        <source>As you may remember, ctrl+L still allows you to clear screen</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="80"/>
+        <source>Cast Ctrl+L to banish everything from the display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="81"/>
+        <source>R u sure noone behind you&apos;s watching ur password? Ctrl+L might help u.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="82"/>
+        <source>Consider using Ctrl+L when you no longer need the password to clear screen</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="83"/>
+        <source>Ctrl+L will be glad to clear screen for you anytime you wish</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="105"/>
+        <source>File Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="106"/>
+        <source>Â» was not found.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="108"/>
+        <source>Would you like to create there a new database? </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="118"/>
+        <source>Internet</source>
+        <comment>default group title</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="119"/>
+        <source>eMail</source>
+        <comment>default group title</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="132"/>
+        <source>The database you are trying to open is locked.
+This means that either someone else has opened the file or KeePassX crashed last time it opened the database.
+
+Do you want to open it anyway read only?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="151"/>
+        <source>Failed to get the database password.
+Au revoir!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="166"/>
+        <source>Unknown error while loading database.</source>
+        <translation type="unfinished">Beim laden der Datenbank ist ein unbekannter Fehler aufgetreten.</translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="167"/>
+        <source>The following error occured while opening the database:
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="186"/>
+        <source>Error</source>
+        <translation type="unfinished">Fehler</translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="187"/>
+        <source>Couldn&apos;t remove database lock file.</source>
+        <translation type="unfinished">Konnte Datenbaksperrdatei nicht entfernen.</translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="208"/>
+        <source>The database has unsaved modifications but cannot be saved since it is empty. It will be rolled back to the latest saved version.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="210"/>
+        <source>The database has not been saved since last modification.
+Would you like to save it now before exit?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="214"/>
+        <source>The database has been saved.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="216"/>
+        <source>Failed to save the database, exit cancelled.
+Consider using Â«save asÂ», save with a new file name as a parameter.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="221"/>
+        <source>The database has been closed, all unsaved modifications have been declined.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="230"/>
+        <source>Launching keepassx cli v</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="299"/>
+        <source>Are you sure to exit? The database is now empty and cannot be saved because of it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="356"/>
+        <source>warning: autoclosing quote!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="400"/>
+        <source>We&apos;re in the root group, there is no parent here. What did you mean?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="417"/>
+        <source>l, lsÂ â list entries and groups in the current group.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="418"/>
+        <source>cd &lt;subgroup&gt; Â â go to a subgroup of the current group.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="419"/>
+        <source>cd .., sÂ â go to the parent group.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="420"/>
+        <source>cd -, back, pÂ â go to the previous group (double Â«pÂ» moves to the previous group, then back to the current one).
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="421"/>
+        <source>cd /Â â go to the root group.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="422"/>
+        <source>cat &lt;entry&gt;Â â display an entry information.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="423"/>
+        <source>passwd &lt;entry&gt;Â â show a passwd stored in the entry. Use Ctrl+L to clear screen after that.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="424"/>
+        <source>setÂ â modify a database entry. Type Â«set helpÂ» for details.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="425"/>
+        <source>create &lt;entry&gt;Â â create new entry. Cannot be performed from the root group.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="426"/>
+        <source>rm &lt;entry&gt;Â â completely remove an entry from the database. Cannot be undone.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="427"/>
+        <source>md &lt;group&gt;, mkdir &lt;group&gt;Â â create a new subgroup here.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="428"/>
+        <source>saveÂ â save the database to disk.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="429"/>
+        <source>save &lt;filename&gt;Â â save the database under the new name and close the original one. The saved database remains open.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="430"/>
+        <source>clear, Ctrl + LÂ â clear screen.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="431"/>
+        <source>find, search:
+	with one parameter: look through the database for the parameter,
+	without parameters: display all records in the database.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="434"/>
+        <source>helpÂ â display the help.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="435"/>
+        <source>exit, Ctrl + DÂ â shutdown the program. If the database has unsaved modifications, the prompt will be displayed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="462"/>
+        <source>There is no subgroup Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="463"/>
+        <source>Â» in the current group.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="472"/>
+        <source>record</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="473"/>
+        <source>group</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="481"/>
+        <source>There is no </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="483"/>
+        <source> with title Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="484"/>
+        <source>Â» in the current group. Consider using the Â«lÂ» command or try Â«?Â».
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="492"/>
+        <source>	url&gt;      </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="492"/>
+        <location filename="../Cli.cpp" line="493"/>
+        <location filename="../Cli.cpp" line="495"/>
+        <location filename="../Cli.cpp" line="496"/>
+        <location filename="../Cli.cpp" line="556"/>
+        <location filename="../Cli.cpp" line="685"/>
+        <location filename="../Cli.cpp" line="689"/>
+        <location filename="../Cli.cpp" line="695"/>
+        <source>
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="493"/>
+        <source>	user&gt;     </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="494"/>
+        <source>	pass&gt; &lt;type Â«passwd </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="494"/>
+        <source>Â» to reveal the password&gt;
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="495"/>
+        <source>	comment&gt;  </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="516"/>
+        <source>There is more than one record with the name Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="517"/>
+        <source>Â» in the current group. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="519"/>
+        <source>The first one will be modified, is it okay?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="526"/>
+        <source>e[1m== set help ==e[0m
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="527"/>
+        <source>Hereafter the word Â«recordÂ» means the title of an existing record in the current group.
+The list of the records you can get either using the command Â«lsÂ» or by pressing &lt;Tab&gt; twice after the whole previous part of the set command.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="529"/>
+        <source> e[1mâe[0m set title record new_title
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="530"/>
+        <source> e[1mâe[0m set user record new_username
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="531"/>
+        <source> e[1mâe[0m set passwd record new_passwd
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="532"/>
+        <source> e[1mâe[0m set url record new_passwd
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="533"/>
+        <source> e[1mâe[0m set comment record new_passwd
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="534"/>
+        <source>if the last argument (new_...) is ommitted, the existing data field will be cleared, but you cannot clear title.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="538"/>
+        <location filename="../Cli.cpp" line="554"/>
+        <source>You need to supply 3 parameters to the command Â«set </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="539"/>
+        <location filename="../Cli.cpp" line="555"/>
+        <source>Â»:
+set </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="540"/>
+        <location filename="../Cli.cpp" line="556"/>
+        <source> title new_</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="541"/>
+        <source>Pass &quot;&quot; as the third argument in case you wish to clear the field. It is impossible to clear the title anyway.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="557"/>
+        <source>Pass &quot;&quot; as the 3rd argument to clear the specified field. The title cannot be cleared.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="590"/>
+        <source>It is impossible to create an entry in the root group, sorry.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="597"/>
+        <source>Current group already contains an item with title Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="598"/>
+        <source>Â». If you create a new one, you won&apos;t be able to modify one of the entries from this console interface of keepassx. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="599"/>
+        <location filename="../Cli.cpp" line="614"/>
+        <source>Continue?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="612"/>
+        <source>Current group already contains a subgroup named Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="613"/>
+        <source>Â». If you create a new one, you won&apos;t be able to cd to one of the groups from this console interface of keepassx. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="641"/>
+        <source>You are about to delete the last group in the database. You won&apos;t be able to save it until some new group is created. If you wish to save the database now, enter Â«nÂ», otherwise answer Â«yÂ» to continue deletion</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="644"/>
+        <source>Are you absolutely sure you wish to irrecoverably erase the whole group Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="644"/>
+        <source>Â» with all its contents? This operation cannot be undone.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="654"/>
+        <source>The command Â«saveÂ» may have one parameter: a new file name. In this case it associates the opened db with the new filename and saves it. No more parameters are supported, what did you mean?
+Feature requests are welcomed at gluk47+kpx@gmail.com</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="661"/>
+        <source>Fail to resolve filename Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="661"/>
+        <source>Â». You should specify a filename in an existing directory without dangling symbolic links in the path. The target file may exist in which case it will be overwritten.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="668"/>
+        <source>The database filename has not been changed: an attempt to save the db with the new name failed.
+System responce: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="670"/>
+        <source>The database has not been saved at all.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="672"/>
+        <location filename="../Cli.cpp" line="689"/>
+        <source>The database has been saved successfully.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="680"/>
+        <source>Sorry, it is impossible to save an empty database.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="685"/>
+        <source>The database has been opened read only. Use save as..., I mean, save with a parameter-new filename.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="694"/>
+        <source>Failed to save the database.
+System responce: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="701"/>
+        <source>Please, enter password: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="711"/>
+        <source>Reenter password or hit Ctrl+D to break: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="760"/>
+        <source>The command Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../Cli.cpp" line="761"/>
+        <source>Â» is undefined, sorry. Try Â«helpÂ» or Â«?Â».</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1501,78 +2045,98 @@ um zu diesem zu springen.</translation>
 <context>
     <name>Kdb3Database</name>
     <message>
-        <location filename="../Kdb3Database.cpp" line="524"/>
-        <location filename="../Kdb3Database.cpp" line="533"/>
-        <location filename="../Kdb3Database.cpp" line="1359"/>
+        <location filename="../Kdb3Database.cpp" line="532"/>
+        <location filename="../Kdb3Database.cpp" line="541"/>
+        <location filename="../Kdb3Database.cpp" line="1369"/>
         <source>Could not open file.</source>
         <translation>Die Datei kann nicht geöffnet werden.</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="557"/>
+        <location filename="../Kdb3Database.cpp" line="565"/>
         <source>Unexpected file size (DB_TOTAL_SIZE &lt; DB_HEADER_SIZE)</source>
         <translation>Unerwartete Dateigröße (DB_TOTAL_SIZE &lt; DB_HEADER_SIZE)</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="574"/>
+        <location filename="../Kdb3Database.cpp" line="582"/>
         <source>Wrong Signature</source>
         <translation>Falsche Signatur</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="579"/>
+        <location filename="../Kdb3Database.cpp" line="587"/>
         <source>Unsupported File Version.</source>
         <translation>Nicht unterstützte Dateiversion.</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="588"/>
+        <location filename="../Kdb3Database.cpp" line="596"/>
         <source>Unknown Encryption Algorithm.</source>
         <translation>Unbekannter bzw. nicht unterstüzter Verschlüsselungsalgorithmus.</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="615"/>
+        <location filename="../Kdb3Database.cpp" line="623"/>
         <source>Unable to initialize the twofish algorithm.</source>
         <translation>Der Twofish-Algorithmus kann nicht initialisiert werden.</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="622"/>
+        <location filename="../Kdb3Database.cpp" line="630"/>
         <source>Unknown encryption algorithm.</source>
         <translation>Unbekannter Verschlüsslungsalgorithmus.</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="627"/>
+        <location filename="../Kdb3Database.cpp" line="635"/>
         <source>Decryption failed.
 The key is wrong or the file is damaged.</source>
         <translation>Die Entschlüsselung ist fehlgeschlagen.
 Der Schlüssel ist falsch oder die Datei ist beschädigt.</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="654"/>
+        <location filename="../Kdb3Database.cpp" line="662"/>
         <source>Hash test failed.
 The key is wrong or the file is damaged.</source>
         <translation>Der Hash-Test ist fehlgeschlagen.
 Der Schlüssel ist falsch oder die Datei ist beschädigt.</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="739"/>
+        <location filename="../Kdb3Database.cpp" line="747"/>
         <source>Invalid group tree.</source>
         <translation>Ungültiger Gruppenbaum.</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="955"/>
+        <location filename="../Kdb3Database.cpp" line="965"/>
         <source>Key file is empty.</source>
         <translation>Die Schlüsseldatei hat keinen Inhalt.</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="1353"/>
+        <location filename="../Kdb3Database.cpp" line="1226"/>
+        <source>Bytes</source>
+        <translation type="unfinished">Bytes</translation>
+    </message>
+    <message>
+        <location filename="../Kdb3Database.cpp" line="1234"/>
+        <source>KiB</source>
+        <translation type="unfinished">KiB</translation>
+    </message>
+    <message>
+        <location filename="../Kdb3Database.cpp" line="1240"/>
+        <source>MiB</source>
+        <translation type="unfinished">MiB</translation>
+    </message>
+    <message>
+        <location filename="../Kdb3Database.cpp" line="1245"/>
+        <source>GiB</source>
+        <translation type="unfinished">GiB</translation>
+    </message>
+    <message>
+        <location filename="../Kdb3Database.cpp" line="1363"/>
         <source>The database must contain at least one group.</source>
         <translation>Die Datenbank muss mindestens eine Gruppe enthalten.</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="677"/>
-        <location filename="../Kdb3Database.cpp" line="684"/>
-        <location filename="../Kdb3Database.cpp" line="696"/>
-        <location filename="../Kdb3Database.cpp" line="710"/>
-        <location filename="../Kdb3Database.cpp" line="717"/>
-        <location filename="../Kdb3Database.cpp" line="733"/>
+        <location filename="../Kdb3Database.cpp" line="685"/>
+        <location filename="../Kdb3Database.cpp" line="692"/>
+        <location filename="../Kdb3Database.cpp" line="704"/>
+        <location filename="../Kdb3Database.cpp" line="718"/>
+        <location filename="../Kdb3Database.cpp" line="725"/>
+        <location filename="../Kdb3Database.cpp" line="741"/>
         <source>Unexpected error: Offset is out of range.</source>
         <translation>Unerwarteter Fehler: Offset ist auserhalb der Reichweite.</translation>
     </message>
@@ -1581,7 +2145,7 @@ Der Schlüssel ist falsch oder die Datei ist beschädigt.</translation>
         <translation type="obsolete">Der Twofish-Algorithmus kann nicht initialisiert werden.</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="1365"/>
+        <location filename="../Kdb3Database.cpp" line="1375"/>
         <source>The database has been opened read-only.</source>
         <translation>Die Datenbank ist schreibgeschützt geöffnet worden.</translation>
     </message>
@@ -1589,24 +2153,20 @@ Der Schlüssel ist falsch oder die Datei ist beschädigt.</translation>
 <context>
     <name>Kdb3Database::EntryHandle</name>
     <message>
-        <location filename="../Kdb3Database.cpp" line="1216"/>
         <source>Bytes</source>
-        <translation>Bytes</translation>
+        <translation type="obsolete">Bytes</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="1224"/>
         <source>KiB</source>
-        <translation>KiB</translation>
+        <translation type="obsolete">KiB</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="1230"/>
         <source>MiB</source>
-        <translation>MiB</translation>
+        <translation type="obsolete">MiB</translation>
     </message>
     <message>
-        <location filename="../Kdb3Database.cpp" line="1235"/>
         <source>GiB</source>
-        <translation>GiB</translation>
+        <translation type="obsolete">GiB</translation>
     </message>
 </context>
 <context>
@@ -1673,17 +2233,17 @@ Der Schlüssel ist falsch oder die Datei ist beschädigt.</translation>
         <translation>Gruppe</translation>
     </message>
     <message>
-        <location filename="../lib/EntryView.cpp" line="380"/>
+        <location filename="../lib/EntryView.cpp" line="382"/>
         <source>Error</source>
         <translation>Fehler</translation>
     </message>
     <message>
-        <location filename="../lib/EntryView.cpp" line="380"/>
+        <location filename="../lib/EntryView.cpp" line="382"/>
         <source>At least one group must exist before adding an entry.</source>
         <translation>Es muss mindestens eine Gruppe existieren, bevor ein Eintrag hinzugefügt werden kann.</translation>
     </message>
     <message>
-        <location filename="../lib/EntryView.cpp" line="380"/>
+        <location filename="../lib/EntryView.cpp" line="382"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
@@ -2413,8 +2973,8 @@ Do you want to save the changes?</source>
 <context>
     <name>ManageBookmarksDlg</name>
     <message>
-        <location filename="../dialogs/ManageBookmarksDlg.cpp" line="56"/>
         <location filename="../forms/ManageBookmarksDlg.ui" line="19"/>
+        <location filename="../dialogs/ManageBookmarksDlg.cpp" line="56"/>
         <source>Manage Bookmarks</source>
         <translation>Lesezeichen verwalten</translation>
     </message>
@@ -2567,6 +3127,24 @@ Die Datei ist nicht lesbar.</translation>
         <location filename="../forms/PasswordDlg.ui" line="277"/>
         <source>Passwords are not equal.</source>
         <translation>Die Passwörter sind nicht identisch.</translation>
+    </message>
+</context>
+<context>
+    <name>QObject</name>
+    <message>
+        <location filename="../helpers/cli.cpp" line="59"/>
+        <source>Please input any of the chars: Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../helpers/cli.cpp" line="61"/>
+        <source>Â» as Â«yesÂ» or Â«</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../helpers/cli.cpp" line="63"/>
+        <source>Â» as Â«noÂ» in either upper or lower case and then press enter.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

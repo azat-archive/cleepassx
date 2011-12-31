@@ -3,6 +3,7 @@
 
 namespace helpers {
 namespace syntax {
+    /// in-class initializable object
     template <typename T, const T default_value = 0>
     struct zero_inited {
         zero_inited(const T& _ = default_value) : value(_) {}
@@ -10,6 +11,11 @@ namespace syntax {
         operator const T&() const { return value; }
         T value;
     };
+    typedef zero_inited<unsigned> zuint;
+    typedef zero_inited<int> zint;
+    typedef zero_inited<bool> zbool;
+    
+    /// just like std::auto_ptr, but invokes free upon destruction
     template <typename T>
     struct auto_free {
         auto_free(T* _) : data(_){}
@@ -20,11 +26,11 @@ namespace syntax {
         T& operator[](size_t _) { return data[_]; }
         T* data;
     };
+    /// function to avoid explicit template parameters
     template <typename T>
     auto_free<T> mk_auto_free(T* _) { return auto_free<T>(_); }
-    typedef zero_inited<unsigned> zuint;
-    typedef zero_inited<int> zint;
-    typedef zero_inited<bool> zbool;
+    
+    /// Push a variable's value, assign a new value and pop back the original one upon the object destruction.
     template <typename T, typename conversible_to_T = T>
     struct hide_value {
         hide_value(T& _, const conversible_to_T& _new) 
@@ -43,6 +49,7 @@ namespace syntax {
     template <typename T> struct Type{};
 }
 namespace qt {
+    /// transform «~/» at the beginning to the path to home dir
     inline QString expandTilde (QString s) {
         if (s.startsWith ("~/"))
             s.replace (0, 1, QDir::homePath());
