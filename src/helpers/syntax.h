@@ -1,6 +1,8 @@
 #pragma once
 #include <iosfwd>
 
+#include <iostream>
+
 namespace helpers {
 namespace syntax {
     /// in-class initializable object
@@ -39,9 +41,9 @@ namespace syntax {
         void Reset() { _Target = _Old_value; }
         ~hide_value() { if (not _Relax) Reset(); }
       private:
-        bool _Relax;
         T& _Target;
         const T _Old_value;
+        bool _Relax;
     };
 
     // I'm sorry, but I've read Alexandrescu and cannot help using it...
@@ -56,7 +58,7 @@ namespace qt {
         return s;
     }
     inline std::ostream& operator<< (std::ostream& _str, const QString& _qstr) {
-        return _str << _qstr.toLocal8Bit().constData();
+        return _str << qPrintable(_qstr);
     }
 }
 }

@@ -49,7 +49,7 @@ using namespace helpers::cli;
 using namespace helpers::qt;
 using namespace std;
 
-const char* Cli::version = "0.2.2";
+const char* Cli::version = "0.2.3";
 
 void onSigInt(int) {
     static bool first_time = true;
@@ -65,7 +65,7 @@ void onSigInt(int) {
         }
     }
     ui.closeDatabase();
-    cout << "Adieu" << endl;
+    cout << "\nAdieu" << endl;
     ::exit (0);
 }
 void enable_echo(bool on = true) {
@@ -77,6 +77,29 @@ void enable_echo(bool on = true) {
     tcsetattr( STDIN_FILENO, TCSANOW, &settings );
 }
 
+///\todo update this struct and move to syntax.h
+struct auto_free {
+    auto_free(char* _) : data(_){}
+    ~auto_free() { cleanup(); }
+    operator char*() const { return data; }
+    char operator[](size_t _) const { return data[_]; }
+
+    void reset (char* _new_buffer = NULL) {
+        if (data == _new_buffer)
+            return;
+        cleanup();
+        data = _new_buffer;
+    }
+    char* release() {
+        char* ptr = data;
+        data = NULL;
+        return ptr;
+    }
+private:
+    void cleanup() { free(data); }
+    char* data;
+};
+    
 struct tmp_echo_disable {
     tmp_echo_disable(){ enable_echo(false); }
     ~tmp_echo_disable() { enable_echo(true); cout << "\n"; }
@@ -89,7 +112,7 @@ char* strdup(const QString& _) {
 }
 void Cli::ClsReminder() const {
     // sometimes they say I'm too talkative...
-    const size_t eloquicity = 9;
+    const size_t eloquicity = 11;
     QString hello[eloquicity] = {
         tr("Remember: ctrl+L clears screen!"),
         tr("To clear screen, you can use ctrl + L."),
@@ -98,8 +121,10 @@ void Cli::ClsReminder() const {
         tr("As you may remember, ctrl+L still allows you to clear screen"),
         tr("Cast Ctrl+L to banish everything from the display"),
         tr("R u sure noone behind you's watching ur password? Ctrl+L might help u."),
-        tr("Consider using Ctrl+L when you no longer need the password to clear screen"),
-        tr("Ctrl+L will be glad to clear screen for you anytime you wish")
+        tr("Consider using Ctrl+L to clear screen when you no longer need the password"),
+        tr("Ctrl+L will be glad to clear screen for you anytime you wish"),
+	tr("When you're done, please cast Ctrl+L to clear screen and hide your password"),
+	tr("Ctrl+L is always glad to protect your sensitive data!")
     };
     cout << hello[unsigned(time(0)) % eloquicity] << "\n";
 }
@@ -112,7 +137,7 @@ struct utf8 {
     operator string() const { return string(Data.toUtf8()); }
 };
 ostream& operator<< (ostream& _str, const utf8& _text) {
-    return _str << _text.Data.toUtf8().data();
+    return _str << qPrintable(_text.Data);//.toUtf8().data();
 }
 
 Cli& Cli::the() {
@@ -166,12 +191,23 @@ bool Cli::openDatabase(const QString& filename, bool IsAuto) {
         if (!lock.open(QIODevice::WriteOnly))
             dbReadOnly = true;
     }
+
+    cout << tr ("Hit Ctrl+D to leave password or keyfile unused") << "\n";
     QString pass = ReadPassword(PasswdConfirm::no);
-    if (pass.isNull()) {
-        cout << tr("Failed to get the database password.\nAu revoir!") << "\n";
+    if (pass.isNull())
+        pass = "";
+
+    QString keyfile = ReadKeyFile();
+    if(keyfile.isNull())
+        keyfile = "";
+
+    if (pass.isEmpty() and keyfile.isEmpty()) {
+        cerr << "You entered no access key, the database cannot be opened.\nAu revoir.\n";
         return false;
     }
-    db->setKey(pass, "");
+
+    db->setKey(pass, keyfile);
+
     if(db->load(filename, dbReadOnly)) {
         if (IsLocked)
             resetLock();
@@ -252,8 +288,10 @@ bool Cli::saveUnsaved() {
     return true;
 }
 int Cli::Run(const QString& _filename) {
+    QTextCodec::setCodecForTr ( QTextCodec::codecForName ( "UTF-8" ) );
+
     std::cout << tr("Launching keepassx cli v") << version << "...\n";
-    
+
     struct sigaction act; //< wow, g++ is able to compile this! I thought it's C-only syntax.
     memset(&act, sizeof(act), 0);
     act.sa_handler = onSigInt;
@@ -318,13 +356,9 @@ QStringList Cli::readCmd() {
     if(ModFlag) prompt += "*";
     if(dbReadOnly) prompt += "#";
     prompt += "$ ";
-    struct auto_free {
-        auto_free(char* _) : data(_){}
-        ~auto_free() { free(data); }
-        operator char*() const { return data; }
-        char operator[](size_t _) const { return data[_]; }
-        char* data;
-    } line (readline(Qstring2constchars(prompt)));
+
+    auto_free line (readline(Qstring2constchars(prompt)));
+
     if (line == NULL) {
         if (ModFlag and db->groups().isEmpty()) {
             cout << tr("Are you sure to exit? The database is now empty and cannot be saved because of it.") << "\n";
@@ -463,7 +497,7 @@ void Cli::help() const {
          "\twith one parameter: look through the database for the parameter,\n"
          "\twithout parameters: display all records in the database.\n")
          << tr("help — display the help.\n")
-         << tr("exit, Ctrl + D — shutdown the program. If the database has unsaved modifications, the prompt will be displayed.");
+         << tr("exit, Ctrl + D — shutdown the program. If the database has unsaved modifications, the prompt will be displayed.\n");
 }
 void Cli::cd(const QString& _subgroup) {
     if (_HSubGroups.empty()) ls(ls_quiet::yes);
@@ -658,6 +692,12 @@ void Cli::md(const QStringList& _entries) {
     }
 }
 void Cli::rm(const QStringList& _entries) {
+    if (_entries.isEmpty()) {
+        cout << tr ("Usage: rm <entry names>") << "\n";
+        return;
+    }
+    cout << tr ("Are you sure to delete the specified entries? This operation cannot be undone.") << "\n";
+    if (ReadYesNoChar("", "y", "n", 'y') != 'y') return;
     for (size_t i = 0; i < _entries.size(); ++i) {
         IEntryHandle* const _ = confirm_first<IEntryHandle>(_entries[i]);
         if (_ == NULL) continue;
@@ -667,8 +707,9 @@ void Cli::rm(const QStringList& _entries) {
     }
 }
 void Cli::rm_rf(const QStringList& _names) {
-    if (_HSubGroups.isEmpty()) ls(ls_quiet::yes);
-    for (size_t i = 0; i < _names.size(); ++i) {
+    if (_HSubGroups.isEmpty())
+        ls (ls_quiet::yes);
+    for (size_t i = 0; i < static_cast<size_t>(_names.size()); ++i) {
         IGroupHandle* _ = confirm_first<IGroupHandle>(_names[i]);
         if (_ == NULL)
             continue;
@@ -732,14 +773,18 @@ bool Cli::save(const QStringList& _filename) {
     return true;
 }
 QString Cli::ReadPassword(PasswdConfirm::flag _confirmation_needed) {
+    struct cin_healer { ~cin_healer() { cin.clear(); } } healer;
+
     QString pass;
    {cout << tr("Please, enter password: ");
     tmp_echo_disable __rped__;
     string s;
     cin >> s;
     pass = QString::fromUtf8(s.c_str());
-   }if (not cin) return QString();
-    if (_confirmation_needed == PasswdConfirm::no) return pass;
+   }if (not cin)
+        return QString();
+    if (_confirmation_needed == PasswdConfirm::no)
+        return pass;
 
     QString confirm;
     while (confirm != pass and cin) {
@@ -749,8 +794,28 @@ QString Cli::ReadPassword(PasswdConfirm::flag _confirmation_needed) {
         cin >> s;
         confirm = QString::fromUtf8(s.c_str());
     }
-    if (cin) return pass;
+    if (cin)
+        return pass;
+    (void) healer; //< gcc, keep in mind: this is not an «unused variable»
     return QString(); //isNull, not isEmpty
+}
+QString Cli::ReadKeyFile(){
+    struct cin_healer { ~cin_healer() { cin.clear(); } } healer;
+
+    QString keyfile;
+    cout << tr("Please, enter key file path (ctrl+D to skip)") << "\n";
+    // I love this ptr-to functions syntax *SARCASM* :)
+    // No. Nonono, no c++11 and «auto» keyword. Let it still be C++03…
+    char** (*f)(const char*, int, int)  = rl_attempted_completion_function;
+    rl_attempted_completion_function = NULL;
+    auto_free ln(readline(Qstring2constchars(tr ("Filename> "))));
+    rl_attempted_completion_function = f;
+//     cin >> s;
+    if (ln == NULL)
+        return QString();
+    keyfile = QString::fromUtf8(ln);
+    (void) healer; //< gcc, keep in mind: this is not an «unused variable»
+    return keyfile;
 }
 void Cli::clearScreen() {
 #if 0
@@ -856,7 +921,8 @@ char* Cli::cmd_completer(const char* _beginning, int _state) {
     if (_AllCmds.empty() or prev_wd != the().Wd()) {
 #define _(cmd) _AllCmds.push_back(cmd)
         _("cd"), _("s"), _("p");
-        _("l"), _("ls"); _("mkdir"), _("rmdir");
+        _("l"), _("ls");
+        _("mkdir"), _("md"), _("rmdir"), _("rd");
         if (the().Wd() != NULL) {
             _("cat"), _("passwd");
             _("set"), _("create"), _("rm");

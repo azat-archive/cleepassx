@@ -42,7 +42,6 @@ public:
     inline bool isLocked() { return IsLocked; };
     ~Cli() { closeDatabase(); }
 
-// this function must be const but that requires Kdb3Database code to be fixed: db->groups must also be const (maybe just Cli::db should be done mutable, I'm not sure…)
     /// list contents of current group (items&subgroups)
     /// if (_quiet) prints nothing, just updates the cache of _HSubGroups
     struct ls_quiet { enum flag { no = false, yes = true }; };
@@ -81,6 +80,8 @@ public:
     **/
     struct PasswdConfirm { enum flag { no = false, yes = true }; };
     QString ReadPassword(PasswdConfirm::flag _confirmation_needed);
+    QString ReadKeyFile();
+    
     void help() const;
 
     static Cli& the();
