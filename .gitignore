@@ -1,0 +1,14 @@
+CMake*
+cmake*
+Makefile
+
+*.gch
+
+# qt
+moc_*
+ui_*.h
+*.qm
+qrc_*
+*.depends
+
+/src/keepassx
