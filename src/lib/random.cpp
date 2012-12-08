@@ -34,6 +34,9 @@
 #include <QDataStream>
 #include <QTime>
 
+#include <sys/types.h>
+#include <unistd.h>
+
 void initStdRand();
 bool getNativeEntropy(quint8* buffer, int length);
 
