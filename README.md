@@ -9,11 +9,16 @@ Build & run instructions:
 
 go to the root of the source tree, then
 
-` $ mkdir build && cd build`
+`$ mkdir build && cd build`
+
 and
-` $ cmake .. && make && ./src/keepassx -cli ~/passwords.kdb`
+
+`$ cmake .. && make && ./src/keepassx -cli ~/passwords.kdb`
+
 or
-` $ qmake .. && make && ./build/keepassx -cli ~/passwords.kdb`
+
+`$ qmake .. && make && ./build/keepassx -cli ~/passwords.kdb`
+
 (replace `~/passwords.kdb` with anything you need)
 
 The cli uses GNU readline, so its devel package has to be installed. I use libreadline6-dev from ubuntu 12.04. And certainly you need cmake or qmake, make and gcc :) This project uses no more gcc-specific than keepassx as well as it does not use C++11 or any other newest features, so at least any gcc4 up to 4.6 is suitable.
