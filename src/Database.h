@@ -158,6 +158,8 @@ public:
 	virtual bool isValid()const=0;
 
 	virtual CEntry data()const=0;
+    
+    virtual ~IEntryHandle () {}
 };
 
 //! Custom Icon Interface
@@ -227,6 +229,7 @@ public:
 	virtual bool expanded()=0;
 	virtual void setExpanded(bool)=0;
 
+    virtual ~IGroupHandle () {}
 };
 
 //! Common Database Interface.

@@ -9,7 +9,7 @@ using namespace helpers::qt;
 
 namespace helpers {
 namespace cli {
-    char** disable_tab_completion(const char* _beginning, int _start, int _end) {
+    char** disable_tab_completion(const char*, int, int) {
         rl_attempted_completion_over = true;
         return NULL;
     }

@@ -1,6 +1,6 @@
 /*
     keepassx command line interface implementation for POSIX OSes.
-    Copyleft © 2011  gluk47@gmail.com
+    Copyleft © 2011–2013  gluk47@gmail.com
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -47,27 +47,11 @@
 using namespace helpers;
 using namespace helpers::cli;
 using namespace helpers::qt;
+using syntax::auto_free;
 using namespace std;
 
-const char* Cli::version = "0.2.3";
+const char* Cli::version = "0.2.4";
 
-void onSigInt(int) {
-    static bool first_time = true;
-    Cli& ui = Cli::the();
-    if (first_time) {
-        syntax::hide_value<bool> _flag_restorer_ (first_time, false);
-        if (ui.HasUnsavedData()) {
-            cout << "Hit Ctrl+C again to immediately terminate the program." << endl;
-            if(not ui.saveUnsaved())
-                if (ReadYesNoChar("Use Force Quit discarding unsaved modifications?",
-                    "y", "n", 'n') != 'y') 
-                    return;
-        }
-    }
-    ui.closeDatabase();
-    cout << "\nAdieu" << endl;
-    ::exit (0);
-}
 void enable_echo(bool on = true) {
     termios settings;
     tcgetattr( STDIN_FILENO, &settings );
@@ -77,29 +61,24 @@ void enable_echo(bool on = true) {
     tcsetattr( STDIN_FILENO, TCSANOW, &settings );
 }
 
-///\todo update this struct and move to syntax.h
-struct auto_free {
-    auto_free(char* _) : data(_){}
-    ~auto_free() { cleanup(); }
-    operator char*() const { return data; }
-    char operator[](size_t _) const { return data[_]; }
-
-    void reset (char* _new_buffer = NULL) {
-        if (data == _new_buffer)
-            return;
-        cleanup();
-        data = _new_buffer;
+void onSigInt (int) {
+    static bool first_time = true;
+    Cli& ui = Cli::the();
+    if (first_time) {
+        syntax::hide_value<bool> _flag_restorer_ (first_time, false);
+        if (ui.HasUnsavedData()) {
+            cout << "Hit Ctrl+C again to immediately terminate the program." << endl;
+            if (not ui.saveUnsaved())
+                if (ReadYesNoChar("Use Force Quit discarding unsaved modifications?",
+                    "y", "n", 'n') != 'y') 
+                    return;
+        }
     }
-    char* release() {
-        char* ptr = data;
-        data = NULL;
-        return ptr;
-    }
-private:
-    void cleanup() { free(data); }
-    char* data;
-};
-    
+    ui.closeDatabase();
+    cout << "\nAdieu" << endl;
+    enable_echo (true);
+    ::exit (0);
+}
 struct tmp_echo_disable {
     tmp_echo_disable(){ enable_echo(false); }
     ~tmp_echo_disable() { enable_echo(true); cout << "\n"; }
@@ -112,7 +91,7 @@ char* strdup(const QString& _) {
 }
 void Cli::ClsReminder() const {
     // sometimes they say I'm too talkative...
-    const size_t eloquicity = 11;
+    const size_t eloquicity = 13;
     QString hello[eloquicity] = {
         tr("Remember: ctrl+L clears screen!"),
         tr("To clear screen, you can use ctrl + L."),
@@ -123,8 +102,10 @@ void Cli::ClsReminder() const {
         tr("R u sure noone behind you's watching ur password? Ctrl+L might help u."),
         tr("Consider using Ctrl+L to clear screen when you no longer need the password"),
         tr("Ctrl+L will be glad to clear screen for you anytime you wish"),
-	tr("When you're done, please cast Ctrl+L to clear screen and hide your password"),
-	tr("Ctrl+L is always glad to protect your sensitive data!")
+        tr("When you're done, please cast Ctrl+L to clear screen and hide your password"),
+        tr("Ctrl+L is always glad to protect your sensitive data!"),
+        tr("Your password will be in safety again, hidden, when you press Ctrl+L"),
+        tr("Once you want your passwords to vanish away from the screen, use Ctrl+L")
     };
     cout << hello[unsigned(time(0)) % eloquicity] << "\n";
 }
@@ -164,24 +145,25 @@ bool Cli::openDatabase(const QString& filename, bool IsAuto) {
         initial_groups.push_back(tr("eMail", "default group title"));
         md(initial_groups);
         db->save();
+        ModFlag = false;
         _Created = true;
         return true;
     }
     _Created = false;
     _Lockfile = filename + ".lock";
     if (QFile::exists(_Lockfile)) {
-        dbReadOnly = true;
-//         char ignbuf[8];
-//         cin.readsome(ignbuf, 7);
         const char readonly_ans =
             ReadYesNoChar(tr("The database you are trying to open is locked.\n"
                 "This means that either someone else has opened the file or KeePassX crashed last time it opened the database.\n\n"
-                "Do you want to open it anyway read only?"
+                "Do you want to open read only (r)\n"
+                "or ignore the lock file and open it read-write (w)?"
         ).toStdString(),
-            string("yд"),
-            string("nн"),
-            'y');
-        if (readonly_ans != 'y') return false;
+            string("r"),
+            string("w"),
+            'r');
+        if (readonly_ans == 'r') {
+            dbReadOnly = true;
+        }
     }
 //     config->setLastKeyLocation(QString());
 //     config->setLastKeyType(PASSWORD);
@@ -192,7 +174,7 @@ bool Cli::openDatabase(const QString& filename, bool IsAuto) {
             dbReadOnly = true;
     }
 
-    cout << tr ("Hit Ctrl+D to leave password or keyfile unused") << "\n";
+    cout << tr ("Hit Ctrl+D or Enter to leave password or keyfile unused") << "\n";
     QString pass = ReadPassword(PasswdConfirm::no);
     if (pass.isNull())
         pass = "";
@@ -245,7 +227,7 @@ void Cli::closeDatabase() {
     if (!dbReadOnly && QFile::exists(_Lockfile)){
         if (!QFile::remove(_Lockfile))
             cerr << tr("Error") << "\n"
-            << tr("Couldn't remove database lock file.");
+            << tr ("Couldn't remove database lock file.");
     }
     _Lockfile.clear();
 }
@@ -357,8 +339,7 @@ QStringList Cli::readCmd() {
     if(dbReadOnly) prompt += "#";
     prompt += "$ ";
 
-    auto_free line (readline(Qstring2constchars(prompt)));
-
+    auto_free <char> line (readline(Qstring2constchars(prompt)));
     if (line == NULL) {
         if (ModFlag and db->groups().isEmpty()) {
             cout << tr("Are you sure to exit? The database is now empty and cannot be saved because of it.") << "\n";
@@ -378,11 +359,13 @@ QStringList Cli::readCmd() {
     size_t i;
     char quote = 0;
     QString lexem;
-    bool char_escaped = false;
+//     bool char_escaped = false;
     for (i = lexem_start; line[i] != 0; ++i) {
         const char c = line[i];
         if (quote != 0) {
+            // quotes have opened
             if (c == quote) {
+                // closing quote occured
                 if (i > lexem_start)
                     lexem += QString::fromUtf8(line + lexem_start,
                                                i - lexem_start);
@@ -394,7 +377,7 @@ QStringList Cli::readCmd() {
             if ((c == '\'' or c == '"')
                 and not
                 (ret.size() > 1
-                 and ret[1] != "passwd")
+                 and ret[1] == "passwd") //< leave quotes as is in password
                ){
                 quote = c;
                 if (i > lexem_start + 1) {
@@ -454,7 +437,7 @@ void Cli::ls(const QStringList& _args) const {
         ls();
         return;
     }
-    for (size_t i = 0; i < _args.size(); ++i) {
+    for (int i = 0; i < _args.size(); ++i) {
         if (_args[i] == "/") {
             cerr << "=== / ===\n";
             ls(NULL);
@@ -599,7 +582,7 @@ void Cli::set(const QStringList& _params) {
         cout << tr("if the last argument (new_...) is ommitted, the existing data field will be cleared, but you cannot clear title.");
         return;
     }
-    IEntryHandle* _ = confirm_first<IEntryHandle>(_params[1]);
+    IEntryHandle* _ = confirm_first <IEntryHandle>(_params[1]);
     if (_ == NULL) return;
     if (_params[0] == "comment") {
         if(_params.size() < 2) {
@@ -661,7 +644,7 @@ void Cli::create(const QStringList& _entries) {
         return;
     }
     if (_HEntries.isEmpty()) ls(ls_quiet::yes);
-    for (size_t i = 0; i < _entries.size(); ++i) {
+    for (int i = 0; i < _entries.size(); ++i) {
         if (_HEntries.contains(_entries[i])) {
             cout << tr("Current group already contains an item with title «")
                  << _entries[i] << tr("». If you create a new one, you won't be able to modify one of the entries from this console interface of keepassx. ");
@@ -671,12 +654,11 @@ void Cli::create(const QStringList& _entries) {
         IEntryHandle* _new = db->newEntry(_Wd);
         _new->setTitle(_entries[i]);
         ModFlag = true;
-        if (not _HEntries.empty())
-            _HEntries.insert(_entries[i], _new);
+        _HEntries.insert(_entries[i], _new);
     }
 }
 void Cli::md(const QStringList& _entries) {
-    for (size_t i = 0; i < _entries.size(); ++i) {
+    for (int i = 0; i < _entries.size(); ++i) {
         if (_HSubGroups.contains(_entries[i])) {
             cout << tr("Current group already contains a subgroup named «")
                  << (utf8)_entries[i] << tr("». If you create a new one, you won't be able to cd to one of the groups from this console interface of keepassx. ");
@@ -698,7 +680,7 @@ void Cli::rm(const QStringList& _entries) {
     }
     cout << tr ("Are you sure to delete the specified entries? This operation cannot be undone.") << "\n";
     if (ReadYesNoChar("", "y", "n", 'y') != 'y') return;
-    for (size_t i = 0; i < _entries.size(); ++i) {
+    for (int i = 0; i < _entries.size(); ++i) {
         IEntryHandle* const _ = confirm_first<IEntryHandle>(_entries[i]);
         if (_ == NULL) continue;
         db->deleteEntry(_);
@@ -803,12 +785,12 @@ QString Cli::ReadKeyFile(){
     struct cin_healer { ~cin_healer() { cin.clear(); } } healer;
 
     QString keyfile;
-    cout << tr("Please, enter key file path (ctrl+D to skip)") << "\n";
+    cout << tr("Please, enter key file path (ctrl+D or Enter to skip)") << "\n";
     // I love this ptr-to functions syntax *SARCASM* :)
     // No. Nonono, no c++11 and «auto» keyword. Let it still be C++03…
     char** (*f)(const char*, int, int)  = rl_attempted_completion_function;
     rl_attempted_completion_function = NULL;
-    auto_free ln(readline(Qstring2constchars(tr ("Filename> "))));
+    auto_free <char> ln (readline(Qstring2constchars(tr ("Filename> "))));
     rl_attempted_completion_function = f;
 //     cin >> s;
     if (ln == NULL)
@@ -848,9 +830,9 @@ void Cli::ProcessCmd(const QStringList& _) {
         QStringList::const_iterator i = _.constBegin();
         while (++i != _.constEnd()) passwd (*i);
     }
-    else if (_[0] == "set") set(_.mid(1));
-    else if (_[0] == "create") create(_.mid(1));
-    else if (_[0] == "rm") rm(_.mid(1));
+    else if (_[0] == "set") set (_.mid(1));
+    else if (_[0] == "create") create (_.mid(1));
+    else if (_[0] == "rm") rm (_.mid(1));
     else if (_[0] == "md" || _[0] == "mkdir") md(_.mid(1));
     else if (_[0] == "rd" || _[0] == "rmdir") rm_rf(_.mid(1));
     else if (_[0] == "save") save(_.mid(1));
@@ -884,10 +866,11 @@ char** Cli::tab_complete(const char* _beginning, int _start, int /*_end*/) {
             // awaiting action for set
             return rl_completion_matches(_beginning, set_completer);
         if (not set_cmd.contains(QRegExp("[^ ]+ [^ ]+ ")))
+            // awaiting entry to apply the action on
             return rl_completion_matches(_beginning, entries_completer);
         return NULL; 
     }
-    if (user_input.startsWith("save "))
+    if (user_input.startsWith ("save "))
         rl_attempted_completion_over = false;
     return NULL;
 }
@@ -945,5 +928,5 @@ char* Cli::set_completer(const char* _beginning, int _state) {
     _("title"); _("passwd"); _("url"), _("comment"); _("user");
     _("help");
 #undef _
-    return complete(_beginning, cmds, i);
+    return complete (_beginning, cmds, i);
 }
