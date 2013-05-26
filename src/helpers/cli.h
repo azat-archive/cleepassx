@@ -24,7 +24,7 @@ namespace helpers {
       **/
     inline std::string& sToLower(std::string& str)
     {
-        for(int i = 0; i < str.size(); i++)
+        for (size_t i = 0; i < str.size(); i++)
             str.replace(i, 1,1, tolower(str[i]));
         return str;
     }

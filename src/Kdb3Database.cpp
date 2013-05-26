@@ -54,8 +54,8 @@ bool Kdb3Database::StdEntryLessThan(const Kdb3Database::StdEntry& This,const Kdb
 }
 
 
-Kdb3Database::Kdb3Database(bool _cli) : cli(_cli),
-                                        File(NULL),
+Kdb3Database::Kdb3Database(bool _cli) : File(NULL),
+                                        cli(_cli),
                                         RawMasterKey(32),
                                         RawMasterKey_CP1252(32),
 	RawMasterKey_Latin1(32), RawMasterKey_UTF8(32), MasterKey(32){

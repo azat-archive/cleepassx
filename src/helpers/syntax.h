@@ -18,16 +18,36 @@ namespace syntax {
     typedef zero_inited<bool> zbool;
     
     /// just like std::auto_ptr, but invokes free upon destruction
-    template <typename T>
-    struct auto_free {
-        auto_free(T* _) : data(_){}
-        ~auto_free() { free(data); }
-        operator const T*() const { return data; }
-        operator T*() { return data; }
-        T operator[](size_t _) const { return data[_]; }
-        T& operator[](size_t _) { return data[_]; }
-        T* data;
-    };
+/**
+ * @brief auto pointer for C arrays.
+ * 
+ * It behaves like std::auto_ptr (and std::unique_ptr in C++11),
+ * but cleans its data using free ().
+ **/
+template <typename T>
+struct auto_free {
+    auto_free(T* _) : data(_){}
+    ~auto_free() { cleanup(); }
+    operator T*() const { return data; }
+    const T& operator[](size_t _) const { return data[_]; }
+    T& operator[](size_t _) { return data[_]; }
+
+    void reset (T* _new_buffer = NULL) {
+        if (data == _new_buffer)
+            return;
+        cleanup ();
+        data = _new_buffer;
+    }
+    T* release () {
+        T* ptr = data;
+        data = NULL;
+        return ptr;
+    }
+private:
+    void cleanup() { free (data); }
+    T* data;
+};
+    
     /// function to avoid explicit template parameters
     template <typename T>
     auto_free<T> mk_auto_free(T* _) { return auto_free<T>(_); }
